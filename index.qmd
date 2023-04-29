@@ -2,7 +2,7 @@
 title: "ISSS608-VAA"
 ---
 
-To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
+To learn more about
 
 ```{r}
 1 + 1
