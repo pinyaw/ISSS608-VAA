@@ -7,7 +7,7 @@ website:
     left:
       - href: index.qmd
         text: Home
-      - href: \In-class Excercise3\In-class Exercise 3.qmd
+      - href: In-class Exercise 3.qmd
         text: In-class Exercise 3
       - about.qmd
       
