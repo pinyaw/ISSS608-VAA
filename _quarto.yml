@@ -5,13 +5,15 @@ website:
   title: "ISSS608-VAA"
   navbar:
     left:
+      - text: "In-class Exercise"
+        menu:
+          - text: "In-class Exercise 3"
+            href: "In-class Excercise3/In-class Exercise 3.qmd"
+            
+    right: 
       - href: index.qmd
         text: Home
       - about.qmd
-      - href: "In-class Excercise3/In-class Exercise 3.qmd"
-        text: "In-class Exercise 3"
-      
-      
 
 format:
   html:

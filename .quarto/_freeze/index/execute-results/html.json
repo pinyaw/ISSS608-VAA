@@ -1,7 +1,7 @@
 {
-  "hash": "a2d7a3e166c5d65571a4d048c1a7103a",
+  "hash": "ca8f560ea90152c070d4d7fb094a1583",
   "result": {
-    "markdown": "---\ntitle: \"ISSS608-VAA\"\n---\n\n\nTo learn more about\n\n\n::: {.cell}\n\n```{.r .cell-code}\n1 + 1\n```\n\n::: {.cell-output .cell-output-stdout}\n```\n[1] 2\n```\n:::\n:::\n\n\nHello world\n",
+    "markdown": "---\ntitle: \"ISSS608-VAA\"\n---\n\n\nWelcome to **ISSS608 Visual Analytics and Applications**. In this website, you will find my coursework prepared for this course.\n\n\n::: {.cell}\n\n```{.r .cell-code}\n1 + 1\n```\n\n::: {.cell-output .cell-output-stdout}\n```\n[1] 2\n```\n:::\n:::\n",
     "supporting": [],
     "filters": [
       "rmarkdown/pagebreak.lua"
