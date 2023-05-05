@@ -1,6 +1,0 @@
----
-title: "In-Class Exercise 3"
-author: "Yap Pin Yaw"
-date: "29 April 2023"
-edit: visual
----
