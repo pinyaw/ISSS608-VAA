@@ -1,0 +1,8 @@
+---
+title: "In-Class_Ex01"
+author: "Yap Pin Yaw"
+---
+
+Tableau Page Link:
+
+<https://public.tableau.com/app/profile/pin6699/viz/TableauStart_16815426006770/Dashboard1?publish=yes>

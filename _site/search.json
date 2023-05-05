@@ -28,10 +28,31 @@
     "text": "exam_data &lt;- read_csv(\"data/Exam_data.csv\")\n\nRows: 322 Columns: 7\n── Column specification ────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr (4): ID, CLASS, GENDER, RACE\ndbl (3): ENGLISH, MATHS, SCIENCE\n\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
   },
   {
+    "objectID": "Hands_on_Ex/Hands-on_Ex03/Hands-on_Ex03.html",
+    "href": "Hands_on_Ex/Hands-on_Ex03/Hands-on_Ex03.html",
+    "title": "Hands_on_Ex03",
+    "section": "",
+    "text": "Tableau Page Link:\nhttps://public.tableau.com/app/profile/pin6699/viz/HandsOn_Ex03/Dashboard_Ex03?publish=yes"
+  },
+  {
     "objectID": "index.html",
     "href": "index.html",
     "title": "ISSS608-VAA",
     "section": "",
     "text": "Welcome to ISSS608 Visual Analytics and Applications. In this website, you will find my coursework prepared for this course.\n\n1 + 1\n\n[1] 2"
+  },
+  {
+    "objectID": "In_class_Ex/In-class_Ex01/In-class_Ex01.html",
+    "href": "In_class_Ex/In-class_Ex01/In-class_Ex01.html",
+    "title": "In-Class_Ex01",
+    "section": "",
+    "text": "Tableau Page Link:\nhttps://public.tableau.com/app/profile/pin6699/viz/TableauStart_16815426006770/Dashboard1?publish=yes"
+  },
+  {
+    "objectID": "In_class_Ex/In-class_Ex03/In-class_Ex03.html",
+    "href": "In_class_Ex/In-class_Ex03/In-class_Ex03.html",
+    "title": "In-Class Exercise 3",
+    "section": "",
+    "text": "Tableau Page Link:\nhttps://public.tableau.com/app/profile/pin6699/viz/In-class-Ex03_YapPinYaw/SalesversusProfit?publish=yes"
   }
 ]

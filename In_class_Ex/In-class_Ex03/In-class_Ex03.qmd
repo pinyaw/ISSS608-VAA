@@ -4,3 +4,7 @@ author: "Yap Pin Yaw"
 date: "29 April 2023"
 edit: visual
 ---
+
+Tableau Page Link:
+
+<https://public.tableau.com/app/profile/pin6699/viz/In-class-Ex03_YapPinYaw/SalesversusProfit?publish=yes>
