@@ -1,0 +1,29 @@
+---
+title: "Take Home Exercise 1"
+author: "Yap Pin Yaw"
+code-fold: true
+---
+
+# **1. Background Information**
+
+City of Engagement, with a total population of 50,000, is a small city located at Country of Nowhere. The city serves as a service centre of an agriculture region surrounding the city. The main agriculture of the region is fruit farms and vineyards. The local council of the city is in the process of preparing the Local Plan 2023. A sample survey of 1000 representative residents had been conducted to collect data related to their household demographic and spending patterns, among other things. The city aims to use the data to assist with their major community revitalization efforts, including how to allocate a very large city renewal grant they have recently received.
+
+# 2. Overview
+
+Grant allocation is important in determining the progress of the city or state depending on the government\'s budget. The availability of financial data allows organizations or government parties to effectively allocate the grant to ensure the city\'s prosperity and harmony. Analysis of the data will provide greater insights and propose effective solution on the allocation to being out the best.
+
+# 3. Objective
+
+The purpose of this exercise is to explore the demographic & financial characteristic of the City of Engagement by using appropriate static and interactive statistical graphics methods.
+
+# 4. Data Source
+
+### 4.1 Participants.csv
+
+This file contains information about the residents of City of Engagement that have agreed to participate in this study.
+
+### 4.2 FinancialJournal.csv
+
+This file contains information about the participants financial transactions over the time period from March 2022 to August 2022.
+
+# 5. Data Issue and Aggregation

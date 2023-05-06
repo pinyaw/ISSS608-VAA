@@ -54,5 +54,54 @@
     "title": "In-Class Exercise 3",
     "section": "",
     "text": "Tableau Page Link:\nhttps://public.tableau.com/app/profile/pin6699/viz/In-class-Ex03_YapPinYaw/SalesversusProfit?publish=yes"
+  },
+  {
+    "objectID": "In_class_Ex/In-class_Ex04/In-class_Ex04.html",
+    "href": "In_class_Ex/In-class_Ex04/In-class_Ex04.html",
+    "title": "In-Class Ex04",
+    "section": "",
+    "text": "pacman::p_load(rstatix, gt, patchwork, tidyverse, webshot2, ggstatsplot)"
+  },
+  {
+    "objectID": "In_class_Ex/In-class_Ex04/In-class_Ex04.html#load-packages",
+    "href": "In_class_Ex/In-class_Ex04/In-class_Ex04.html#load-packages",
+    "title": "In-Class Ex04",
+    "section": "",
+    "text": "pacman::p_load(rstatix, gt, patchwork, tidyverse, webshot2, ggstatsplot)"
+  },
+  {
+    "objectID": "In_class_Ex/In-class_Ex04/In-class_Ex04.html#import-data",
+    "href": "In_class_Ex/In-class_Ex04/In-class_Ex04.html#import-data",
+    "title": "In-Class Ex04",
+    "section": "Import Data",
+    "text": "Import Data\n\nexam_data &lt;- read_csv(\"data/Exam_data.csv\")"
+  },
+  {
+    "objectID": "In_class_Ex/In-class_Ex04/In-class_Ex04.html#visualising-normal-distribution",
+    "href": "In_class_Ex/In-class_Ex04/In-class_Ex04.html#visualising-normal-distribution",
+    "title": "In-Class Ex04",
+    "section": "Visualising Normal Distribution",
+    "text": "Visualising Normal Distribution\nIf the data is normally distributed, the points in a Q-Q plot will lie on a straight diagonal line. Conversely, if the points deviate significantly from the straight diagonal line, then it’s less likely that the data is normally distributed.\n\nThe plotThe code chunk\n\n\n\n\n\n\n\n\n\n\nggplot(exam_data,\n       aes(sample=ENGLISH)) +\n  stat_qq() +\n  stat_qq_line()\n\n\n\n\n\n\n\n\n\n\nNote\n\n\n\nWe can see that the points deviate significantly from the straight diagonal line. This is a clear indication that the set of data is not normally distributed.\n\n\n\nCombining Statistical graph and analysis table\n\nThe plotThe code chunk\n\n\n\n\n\n\n\n\n\n\nqq &lt;- ggplot(exam_data,\n             aes(sample=ENGLISH)) +\n stat_qq() +\n stat_qq_line()\n\nsw_t &lt;- exam_data %&gt;%\n  shapiro_test(ENGLISH) %&gt;%\n  gt()\n\ntmp &lt;- tempfile(fileext = '.png')\ngtsave(sw_t, tmp)\ntable_png &lt;- png::readPNG(tmp,native = TRUE)\n\nqq + table_png"
+  },
+  {
+    "objectID": "In_class_Ex/In-class_Ex04/In-class_Ex04.html#student-t-test-using-a-histogram-for-english",
+    "href": "In_class_Ex/In-class_Ex04/In-class_Ex04.html#student-t-test-using-a-histogram-for-english",
+    "title": "In-Class Ex04",
+    "section": "Student T-test using a Histogram for ENGLISH",
+    "text": "Student T-test using a Histogram for ENGLISH\n\nset.seed(1234)\n\ngghistostats(\n  data = exam_data,\n  x = ENGLISH,\n  type = \"p\",\n  test.value = 60,\n  xlab = \"English scores\"\n)"
+  },
+  {
+    "objectID": "In_class_Ex/In-class_Ex04/In-class_Ex04.html#welch-test-for-maths",
+    "href": "In_class_Ex/In-class_Ex04/In-class_Ex04.html#welch-test-for-maths",
+    "title": "In-Class Ex04",
+    "section": "Welch test for MATHS",
+    "text": "Welch test for MATHS\n\nggbetweenstats(\n  data = exam_data,\n  x = GENDER, \n  y = MATHS,\n  type = \"p\",\n  messages = FALSE\n)"
+  },
+  {
+    "objectID": "Take_Home_Ex/Take-home_Ex01/Take-home_Ex01.html",
+    "href": "Take_Home_Ex/Take-home_Ex01/Take-home_Ex01.html",
+    "title": "Take Home Exercise 1",
+    "section": "",
+    "text": "1. Background Information\nCity of Engagement, with a total population of 50,000, is a small city located at Country of Nowhere. The city serves as a service centre of an agriculture region surrounding the city. The main agriculture of the region is fruit farms and vineyards. The local council of the city is in the process of preparing the Local Plan 2023. A sample survey of 1000 representative residents had been conducted to collect data related to their household demographic and spending patterns, among other things. The city aims to use the data to assist with their major community revitalization efforts, including how to allocate a very large city renewal grant they have recently received.\n\n\n2. Overview\nGrant allocation is important in determining the progress of the city or state depending on the government's budget. The availability of financial data allows organizations or government parties to effectively allocate the grant to ensure the city's prosperity and harmony. Analysis of the data will provide greater insights and propose effective solution on the allocation to being out the best.\n\n\n3. Objective\nThe purpose of this exercise is to explore the demographic & financial characteristic of the City of Engagement by using appropriate static and interactive statistical graphics methods.\n\n\n4. Data Source\n\n4.1 Participants.csv\nThis file contains information about the residents of City of Engagement that have agreed to participate in this study.\n\n\n4.2 FinancialJournal.csv\nThis file contains information about the participants financial transactions over the time period from March 2022 to August 2022.\n\n\n\n5. Data Issue and Aggregation"
   }
 ]
