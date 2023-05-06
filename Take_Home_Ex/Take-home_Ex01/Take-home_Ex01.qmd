@@ -1,7 +1,10 @@
 ---
 title: "Take Home Exercise 1"
 author: "Yap Pin Yaw"
+date: "6 May 2023"
+date-modified: "`r Sys.Date()`"
 code-fold: true
+warning: false
 ---
 
 # **1. Background Information**
@@ -26,4 +29,32 @@ This file contains information about the residents of City of Engagement that ha
 
 This file contains information about the participants financial transactions over the time period from March 2022 to August 2022.
 
-# 5. Data Issue and Aggregation
+# 5. Pre-Analaysis Data Preperation 
+
+## 5.1 Load Packages
+
+```{r}
+pacman::p_load(rstatix, gt, patchwork, tidyverse, webshot2, ggstatsplot, dplyr, plotly, ggplot2, reshape2, readr, matrixStats)
+```
+
+## 5.2 Import Data
+
+```{r}
+participants_df <- read_csv("data/Participants.csv")
+finance_df <- read_csv("data/FinancialJournal.csv")
+```
+
+## 5.3 Data Issue
+
+### 5.3.1 Data Duplication
+
+To prevent any double counting of a similar event, data duplication check and removal are to be executed to ensure higher data accuracy. Feel free to view the codes below that are being used to removal duplication.
+
+```{r}
+participants_df2 <- participants_df %>% distinct()
+finance_df2 <- finance_df %>% distinct()
+```
+
+
+
+

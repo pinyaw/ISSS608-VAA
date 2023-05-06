@@ -102,6 +102,27 @@
     "href": "Take_Home_Ex/Take-home_Ex01/Take-home_Ex01.html",
     "title": "Take Home Exercise 1",
     "section": "",
-    "text": "1. Background Information\nCity of Engagement, with a total population of 50,000, is a small city located at Country of Nowhere. The city serves as a service centre of an agriculture region surrounding the city. The main agriculture of the region is fruit farms and vineyards. The local council of the city is in the process of preparing the Local Plan 2023. A sample survey of 1000 representative residents had been conducted to collect data related to their household demographic and spending patterns, among other things. The city aims to use the data to assist with their major community revitalization efforts, including how to allocate a very large city renewal grant they have recently received.\n\n\n2. Overview\nGrant allocation is important in determining the progress of the city or state depending on the government's budget. The availability of financial data allows organizations or government parties to effectively allocate the grant to ensure the city's prosperity and harmony. Analysis of the data will provide greater insights and propose effective solution on the allocation to being out the best.\n\n\n3. Objective\nThe purpose of this exercise is to explore the demographic & financial characteristic of the City of Engagement by using appropriate static and interactive statistical graphics methods.\n\n\n4. Data Source\n\n4.1 Participants.csv\nThis file contains information about the residents of City of Engagement that have agreed to participate in this study.\n\n\n4.2 FinancialJournal.csv\nThis file contains information about the participants financial transactions over the time period from March 2022 to August 2022.\n\n\n\n5. Data Issue and Aggregation"
+    "text": "City of Engagement, with a total population of 50,000, is a small city located at Country of Nowhere. The city serves as a service centre of an agriculture region surrounding the city. The main agriculture of the region is fruit farms and vineyards. The local council of the city is in the process of preparing the Local Plan 2023. A sample survey of 1000 representative residents had been conducted to collect data related to their household demographic and spending patterns, among other things. The city aims to use the data to assist with their major community revitalization efforts, including how to allocate a very large city renewal grant they have recently received."
+  },
+  {
+    "objectID": "Take_Home_Ex/Take-home_Ex01/Take-home_Ex01.html#load-packages",
+    "href": "Take_Home_Ex/Take-home_Ex01/Take-home_Ex01.html#load-packages",
+    "title": "Take Home Exercise 1",
+    "section": "5.1 Load Packages",
+    "text": "5.1 Load Packages\n\n\nCode\npacman::p_load(rstatix, gt, patchwork, tidyverse, webshot2, ggstatsplot, dplyr, plotly, ggplot2, reshape2, readr, matrixStats)"
+  },
+  {
+    "objectID": "Take_Home_Ex/Take-home_Ex01/Take-home_Ex01.html#import-data",
+    "href": "Take_Home_Ex/Take-home_Ex01/Take-home_Ex01.html#import-data",
+    "title": "Take Home Exercise 1",
+    "section": "5.2 Import Data",
+    "text": "5.2 Import Data\n\n\nCode\nparticipants_df &lt;- read_csv(\"data/Participants.csv\")\nfinance_df &lt;- read_csv(\"data/FinancialJournal.csv\")"
+  },
+  {
+    "objectID": "Take_Home_Ex/Take-home_Ex01/Take-home_Ex01.html#data-issue",
+    "href": "Take_Home_Ex/Take-home_Ex01/Take-home_Ex01.html#data-issue",
+    "title": "Take Home Exercise 1",
+    "section": "5.3 Data Issue",
+    "text": "5.3 Data Issue\n\n5.3.1 Data Duplication\nTo prevent any double counting of a similar event, data duplication check and removal are to be executed to ensure higher data accuracy. Feel free to view the codes below that are being used to removal duplication.\n\n\nCode\nparticipants_df2 &lt;- participants_df %&gt;% distinct()\nfinance_df2 &lt;- finance_df %&gt;% distinct()"
   }
 ]
