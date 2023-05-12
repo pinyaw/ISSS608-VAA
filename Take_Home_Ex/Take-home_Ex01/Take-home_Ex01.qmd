@@ -13,7 +13,7 @@ City of Engagement, with a total population of 50,000, is a small city located a
 
 # 2. Overview
 
-Grant allocation is important in determining the progress of the city or state depending on the government\'s budget. The availability of financial data allows organizations or government parties to effectively allocate the grant to ensure the city\'s prosperity and harmony. Analysis of the data will provide greater insights and propose effective solution on the allocation to being out the best.
+Grant allocation is important in determining the progress of the city or state depending on the government's budget. The availability of financial data allows organizations or government parties to effectively allocate the grant to ensure the city's prosperity and harmony. Analysis of the data will provide greater insights and propose effective solution on the allocation to being out the best.
 
 # 3. Objective
 
@@ -29,12 +29,12 @@ This file contains information about the residents of City of Engagement that ha
 
 This file contains information about the participants financial transactions over the time period from March 2022 to August 2022.
 
-# 5. Pre-Analaysis Data Preperation 
+# 5. Pre-Analaysis Data Preperation
 
 ## 5.1 Load Packages
 
 ```{r}
-pacman::p_load(rstatix, gt, patchwork, tidyverse, webshot2, ggstatsplot, dplyr, plotly, ggplot2, reshape2, readr, matrixStats)
+pacman::p_load(rstatix, gt, patchwork, tidyverse, webshot2, ggstatsplot, dplyr, plotly, ggplot2, reshape2, readr, matrixStats, ggiraph, lessR, formattable, scales, ggmosaic, ggridges, lubridate, ggstatsplot, ggpubr, GGally, corrplot)
 ```
 
 ## 5.2 Import Data
@@ -55,6 +55,278 @@ participants_df2 <- participants_df %>% distinct()
 finance_df2 <- finance_df %>% distinct()
 ```
 
+## 5.4 Data Aggregation
+
+# 6. Data Analysis
+
+## 6.1 Demographics
+
+Let us understand more about the paticipants before we delve into their respective financial health.
+
+### 6.1.1 Education Level
+
+Based on the pie chart below, we can observe that the survey participants are mainly consists of HighSchoolOrCollege education level (51.9%), followed by Bachelors, Graduate and Low. Therefore, moving forward analyses conducted after have to take into account of this information.
+
+```{r}
+educount <-table(participants_df2$educationLevel)
+percentage_edu <- educount/ sum(educount)
+percentage_edu_labels <- paste0(round(percentage_edu*100),"%")
+df_edu <- data.frame(educount,percentage_edu,percentage_edu_labels)
+
+#Change column names
+colnames(df_edu)[1] <- "educationLevel"
+colnames(df_edu)[2] <- "Count"
+colnames(df_edu)[3] <- "educationLevel2"
+colnames(df_edu)[4] <- "percentage_edu"
+
+fig_edu <- df_edu |> 
+  plot_ly() |> 
+  add_trace(
+    labels = ~educationLevel,
+    values = ~Count, 
+    type = "pie") %>%
+  layout(title = 'Education Level Distribution', plot_bgcolor = "#e5ecf6")
+fig_edu
+
+```
+
+### 6.1.2 Do higher educated participants tend to not have kids?
+
+It can be observed that HighSchoolOrCollege have the highest percentage as well as the count for participants who have kids from the provided data. Bachechors and Graduate participants have a slightly higher percentage of haveKids = False within their own groups as compared to the Low education participants.
+
+From the width of the Mosaic plot, HighSchoolOrCollege has the highest participants count and Low education has the least participants. Assuming the participants here are the representation of the whole population of the city, we can conclude that lower education participants indeed have a higher tendency to have kids, while higher qualification participants would weigh in the cost of having kids and hence chose not to have kids.
+
+```{r}
+d <- ggplot(participants_df2) +
+  geom_mosaic(aes(x = product(educationLevel), fill = haveKids)) +
+  scale_y_continuous(limits = c(0, 1.0))
+
+ggplotly(d, tooltip ="y")
+```
+
+### 6.1.3 Do higher educated participants have a higher wage income?
+
+To further understand the demographics of the participants, age groups are being formed such that we can analyse the patterns and trends exhibit by the similar age group of people.
+
+The age data provided is in continuous form, therefore the age data is being regrouped into 4 distinct groups. The 4 groups presented are : (1) Group age 18 -- 30 participants (2) Group age 31 -- 40 participants (3) Group age 41- 50 participants (4) Group age Above 50 participants.
+
+#### Regrouping Code
+
+```{r}
+df_regrouped <- participants_df2 %>%
+  mutate(age_group = case_when(
+    age <= 35 ~ "Group 18 - 30",
+    age <= 40 ~ "Group 31 - 40",
+    age <= 50 ~ "Group 41 - 50",
+    TRUE ~ "Group Above 50"
+  ))
+df_regrouped
+```
+
+Based on the boxplot below, we can observe that Group 18-30 has a closer median and mean as compared to Group 31-40, while Group 41-50 has a closer median and mean with Group Above 50. Judging by the lines of the boxplot, the higher age groups (41 and above) tends to have a lower average of joviality while participating in this survey. This might be due to the higher commitments as well as higher responsibilities.
+
+#### Boxplot Code
+
+```{r}
+plot_ly(
+  data = df_regrouped,
+  y = ~joviality,
+  x = ~age_group,
+  type = "box",
+  boxmean = TRUE,
+  color = ~age_group,
+  showlegend = FALSE,
+  boxpoints = "all"
+) %>%
+layout(title = 'Joviality boxplots across each age group')
+```
+
+## 6.2 Financial Health
+
+### 6.2.1 Do participants with kids have a higher cost of living?
+
+To determine if cost is higher for participants with kids, the below boxplot was plotted to see the distribution of each type of cost grouped by participants' haveKids status. Education cost is only present for participants who have kids. In addition, Shelter Cost's Mean and median is also appeared to be higher than for participants who have kids as they need to have a larger space as well as a permanent space for a more comfortable living environment for the kids.
+
+On the flip side, the distribution for Food and Recreation Cost seems to be similar. Participants with kids have a higher median for Recreation Cost, most likely due to the additional cost for children (cheaper than an adult) for all the recreational activities. As for Food, not much difference can be observed between participants with or without kids.
+
+```{r}
+df_cat1 <- subset(finance_df2, select = -c(timestamp) )
+
+# summation of the amount based on ID and category
+df_cat2 <- df_cat1 %>%
+  group_by(participantId, category) %>%
+  summarize(amount = sum(amount))
+
+# To exclude Wage and RentAdjustment as they are income
+df_cat <- df_cat2[!(df_cat2$category %in% c("Wage","RentAdjustment")), ]
+
+# change negative values to positive so as to be able to show the Cost in positive numbers
+df_cat <- df_cat %>% mutate(across(.cols = c(amount), .fns = abs))
+
+# Join participant demographic data
+joined_df <- inner_join(participants_df2, df_cat, by = "participantId")
+
+#Boxplot
+pp <-ggplot(joined_df, aes(x = haveKids, y = amount, fill = category)) +
+  geom_boxplot() +
+  theme_classic() +
+  scale_y_continuous(name = "Cost Amount")
+ggplotly(pp)%>%layout(boxmode = "group")
+```
+
+::: callout-tip
+Without the boxmode in `ggplotly`, the boxplots under each group will be combined together under one line of plot. It would be harder for the readers to have a sense where does the different categories stand. Hence it is necessary to add in the `boxmode = "group"` to have the above view.
+:::
+
+### 6.2.2 Does higher wage earner tend to have a higher cost of living?
+
+The below scatter plot showed the best fit line across the distribution. However, we can observe clearly that distribution data points are mainly situated nearer to the lower income section.  To further validate this test, correlation coefficient significant test is being carried out at 95% confidence interval.
+
+#### H0: There is no significant correlation between the variables
+#### H1: The correlation between the variables is statistically significant
+
+From a statistical point of view, the p-value computed was less than 0.05, therefore we have sufficient evidence to reject H0 and conclude that there is a correlation between wage cost of living. However, the expectation is different as they are negatively correlated. From the data points, it is observed that there are a significant number of residents who are having a higher cost of living despite having a lower wage, while the top wage earners’ cost of living remained below 10000 over the period.
 
 
+```{r}
+#Remove timestamp
+df_cat1 <- subset(finance_df2, select = -c(timestamp) )
 
+# summation of the amount based on ID and category
+df_income_cost1 <- df_cat1 %>%
+  group_by(participantId, category) %>%
+  summarize(amount = sum(amount))
+
+# To regroup into Income and Cost
+df_income_cost1 <- df_income_cost1 %>%
+  mutate(Type = case_when(
+    category == "Wage" ~ "Income",
+    category == "RentAdjustment" ~ "Income",
+    TRUE ~ "Cost"
+  ))
+df_income_cost1 <- subset(df_income_cost1, select = -c(category) )
+
+df_income_cost1 <- df_income_cost1 %>%
+  group_by(participantId, Type) %>%
+  summarize(amount = sum(amount))
+
+# change negative values to positive so as to be able to show the Cost in positive numbers
+df_income_cost1 <- df_income_cost1 %>% mutate(across(.cols = c(amount), .fns = abs))
+
+df_income_cost_final <- pivot_wider(df_income_cost1, names_from = Type, values_from = amount, values_fn = sum)
+
+# Perform bivariate test
+fit <- lm(Cost ~ Income, data = df_income_cost_final)
+p_val <- summary(fit)$coefficients[2, 4]
+
+# Create scatter plot with regression line and confidence intervals
+ggscatter(df_income_cost_final, x = "Income", y = "Cost", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson", 
+          cor.plot = TRUE, cor.coef.digits = 2) +
+  stat_regline_equation(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")),
+                       label.x.npc = 0.5, label.y.npc = 0.98) 
+          #annotate("text", x = 50000, y = 1000, label = paste("p-value = ", p_val))
+```
+Therefore, higher income individuals do not mean they will be spending more, while lower income individuals might have a high cost of living due to the need of supporting his family or with the presence of kids. 
+
+### 6.2.3 Participants with higher wage income tends to have higher joviality.
+
+From the below scatterplot, it seemed that they are negatively correlated. To further validate this test, correlation coefficient significant test is being carried out at 95% confidence interval.
+
+#### H0: There is no significant correlation between the variables
+#### H1: The correlation between the variables is statistically significant
+
+The test has shown a p-value less than 0.05, therefore we have sufficient evidence to reject H0 and conclude that there is a linear relationship and a negative correlation between the wage income and joviality. Thus, proving that higher wage income does not mean that they are happy with their current state.
+
+```{r}
+#Remove timestamp
+df_wage1 <- subset(finance_df2, select = -c(timestamp) )
+
+# summation of the amount based on ID and category
+df_wage1 <- df_wage1 %>%
+  group_by(participantId, category) %>%
+  summarize(amount = sum(amount))
+
+# To regroup into Income and Cost
+df_wage1 <- df_wage1 %>%
+  mutate(Type = case_when(
+    category == "Wage" ~ "Income",
+    category == "RentAdjustment" ~ "Income",
+    TRUE ~ "Cost"
+  ))
+df_wage1 <- subset(df_wage1, select = -c(category) )
+
+df_wage1 <- df_wage1 %>%
+  group_by(participantId, Type) %>%
+  summarize(amount = sum(amount))
+
+# change negative values to positive so as to be able to show the Cost in positive numbers
+df_wage1 <- df_wage1 %>% mutate(across(.cols = c(amount), .fns = abs))
+
+df_wage_final <- pivot_wider(df_wage1, names_from = Type, values_from = amount, values_fn = sum)
+
+# Join participant demographic data
+joined_df <- inner_join(participants_df2, df_wage_final, by = "participantId")
+
+# Perform bivariate test
+fit <- lm(joviality ~ Income, data = joined_df)
+p_val <- summary(fit)$coefficients[2, 4]
+
+# Create scatter plot with regression line and confidence intervals
+ggscatter(joined_df, x = "joviality", y = "Income", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson", 
+          cor.plot = TRUE, cor.coef.digits = 2) +
+  stat_regline_equation(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")),
+                       label.x.npc = 0.5, label.y.npc = 0.98) 
+          #annotate("text", x = 50000, y = 1000, label = paste("p-value = ", p_val))
+```
+
+### 6.2.4	Do higher educated participants have a higher wage income?
+
+Based on the below plotted graph, we can see that participants with Bachelors and Graduate degree tend to have a higher mean as well as median. Despite the outlier in both groups, the medians still observed to be higher. 
+
+we proceed to perform the non-parametric test at 95% confidence interval using the Kruskal-Wallis.
+
+#### H0: The average wage income across each education group is the same.
+#### H1: The average wage income across each education group is not all the same.
+
+```{r}
+#Remove timestamp
+df_edu1 <- subset(finance_df2, select = -c(timestamp) )
+
+# summation of the amount based on ID and category
+df_edu1 <- df_edu1 %>%
+  group_by(participantId, category) %>%
+  summarize(amount = sum(amount))
+
+# To regroup into Income and Cost
+df_edu1 <- df_edu1 %>%
+  mutate(Type = case_when(
+    category == "Wage" ~ "Income",
+    category == "RentAdjustment" ~ "Income",
+    TRUE ~ "Cost"
+  ))
+df_edu1 <- subset(df_edu1, select = -c(category) )
+
+df_edu1 <- df_edu1 %>%
+  group_by(participantId, Type) %>%
+  summarize(amount = sum(amount))
+
+# change negative values to positive so as to be able to show the Cost in positive numbers
+df_edu1 <- df_edu1 %>% mutate(across(.cols = c(amount), .fns = abs))
+
+df_edu_final <- pivot_wider(df_edu1, names_from = Type, values_from = amount, values_fn = sum)
+
+# Join participant demographic data
+joined_df <- inner_join(participants_df2, df_edu_final, by = "participantId")
+
+ggbetweenstats(
+  data = joined_df,
+  x    = educationLevel, 
+  y    = Income, 
+  type = "nonparametric")
+```
+
+The p-value of the Kruskal-Wallis test is lower than 0.05, therefore we have sufficient evidence to reject H0 that the average wage income is similar across different educational groups, and participants with higher education qualification have higher wage income.
