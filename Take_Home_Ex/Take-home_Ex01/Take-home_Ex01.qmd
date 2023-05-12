@@ -7,7 +7,7 @@ code-fold: true
 warning: false
 ---
 
-# **1. Background Information**
+# 1. Background Information
 
 City of Engagement, with a total population of 50,000, is a small city located at Country of Nowhere. The city serves as a service centre of an agriculture region surrounding the city. The main agriculture of the region is fruit farms and vineyards. The local council of the city is in the process of preparing the Local Plan 2023. A sample survey of 1000 representative residents had been conducted to collect data related to their household demographic and spending patterns, among other things. The city aims to use the data to assist with their major community revitalization efforts, including how to allocate a very large city renewal grant they have recently received.
 
@@ -180,13 +180,13 @@ Without the boxmode in `ggplotly`, the boxplots under each group will be combine
 
 ### 6.2.2 Does higher wage earner tend to have a higher cost of living?
 
-The below scatter plot showed the best fit line across the distribution. However, we can observe clearly that distribution data points are mainly situated nearer to the lower income section.  To further validate this test, correlation coefficient significant test is being carried out at 95% confidence interval.
+The below scatter plot showed the best fit line across the distribution. However, we can observe clearly that distribution data points are mainly situated nearer to the lower income section. To further validate this test, correlation coefficient significant test is being carried out at 95% confidence interval.
 
 #### H0: There is no significant correlation between the variables
+
 #### H1: The correlation between the variables is statistically significant
 
-From a statistical point of view, the p-value computed was less than 0.05, therefore we have sufficient evidence to reject H0 and conclude that there is a correlation between wage cost of living. However, the expectation is different as they are negatively correlated. From the data points, it is observed that there are a significant number of residents who are having a higher cost of living despite having a lower wage, while the top wage earners’ cost of living remained below 10000 over the period.
-
+From a statistical point of view, the p-value computed was less than 0.05, therefore we have sufficient evidence to reject H0 and conclude that there is a correlation between wage cost of living. However, the expectation is different as they are negatively correlated. From the data points, it is observed that there are a significant number of residents who are having a higher cost of living despite having a lower wage, while the top wage earners' cost of living remained below 10000 over the period.
 
 ```{r}
 #Remove timestamp
@@ -228,13 +228,15 @@ ggscatter(df_income_cost_final, x = "Income", y = "Cost",
                        label.x.npc = 0.5, label.y.npc = 0.98) 
           #annotate("text", x = 50000, y = 1000, label = paste("p-value = ", p_val))
 ```
-Therefore, higher income individuals do not mean they will be spending more, while lower income individuals might have a high cost of living due to the need of supporting his family or with the presence of kids. 
+
+Therefore, higher income individuals do not mean they will be spending more, while lower income individuals might have a high cost of living due to the need of supporting his family or with the presence of kids.
 
 ### 6.2.3 Participants with higher wage income tends to have higher joviality.
 
 From the below scatterplot, it seemed that they are negatively correlated. To further validate this test, correlation coefficient significant test is being carried out at 95% confidence interval.
 
 #### H0: There is no significant correlation between the variables
+
 #### H1: The correlation between the variables is statistically significant
 
 The test has shown a p-value less than 0.05, therefore we have sufficient evidence to reject H0 and conclude that there is a linear relationship and a negative correlation between the wage income and joviality. Thus, proving that higher wage income does not mean that they are happy with their current state.
@@ -283,13 +285,14 @@ ggscatter(joined_df, x = "joviality", y = "Income",
           #annotate("text", x = 50000, y = 1000, label = paste("p-value = ", p_val))
 ```
 
-### 6.2.4	Do higher educated participants have a higher wage income?
+### 6.2.4 Do higher educated participants have a higher wage income?
 
-Based on the below plotted graph, we can see that participants with Bachelors and Graduate degree tend to have a higher mean as well as median. Despite the outlier in both groups, the medians still observed to be higher. 
+Based on the below plotted graph, we can see that participants with Bachelors and Graduate degree tend to have a higher mean as well as median. Despite the outlier in both groups, the medians still observed to be higher.
 
 we proceed to perform the non-parametric test at 95% confidence interval using the Kruskal-Wallis.
 
 #### H0: The average wage income across each education group is the same.
+
 #### H1: The average wage income across each education group is not all the same.
 
 ```{r}
@@ -330,3 +333,19 @@ ggbetweenstats(
 ```
 
 The p-value of the Kruskal-Wallis test is lower than 0.05, therefore we have sufficient evidence to reject H0 that the average wage income is similar across different educational groups, and participants with higher education qualification have higher wage income.
+
+# 7. Recommendations and Conclusions
+
+## 7.1 Data recommendations
+
+-   Cost spending do not include the time factor. Without the time factor, it is hard to determine if the spending on recreation/food is worth it. It is hard to gauge the participants' experience over their spending without the time factor
+
+-   To collect the joviality statistics again at the end of the survey to see if the change in spending or income affect the participant's experience.
+
+-   Additional shelter information such as renting or self-buy would be useful to reflect the participant's overall experience towards the paid shelter cost.
+
+-   To add in the nature of the job. The addition of the job nature allows us to understand better if a residents' is an employee, self-employed entrepreneurs, or farmers.
+
+## 7.2 Conclusion
+
+There is no obvious similar trend that is being observed from any of the group that was presented in the dataset (eg. Education level, haveKids, etc). More data (mentioned above) is needed to further substantiate as well as to provide more context towards the participants behavior and characteristics. With the addition of the recommended data, clustering analysis can be carried in the next steps to further analyse and identify groups with similar patterns.
