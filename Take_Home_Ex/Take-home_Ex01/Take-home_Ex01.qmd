@@ -3,8 +3,13 @@ title: "Take Home Exercise 1"
 author: "Yap Pin Yaw"
 date: "6 May 2023"
 date-modified: "`r Sys.Date()`"
-code-fold: true
-warning: false
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+execute:
+  warning: false
+editor: visual
 ---
 
 # 1. Background Information
@@ -120,7 +125,6 @@ df_regrouped <- participants_df2 %>%
     age <= 50 ~ "Group 41 - 50",
     TRUE ~ "Group Above 50"
   ))
-df_regrouped
 ```
 
 Based on the boxplot below, we can observe that Group 18-30 has a closer median and mean as compared to Group 31-40, while Group 41-50 has a closer median and mean with Group Above 50. Judging by the lines of the boxplot, the higher age groups (41 and above) tends to have a lower average of joviality while participating in this survey. This might be due to the higher commitments as well as higher responsibilities.
@@ -145,32 +149,38 @@ layout(title = 'Joviality boxplots across each age group')
 
 ### 6.2.1 Do participants with kids have a higher cost of living?
 
-To determine if cost is higher for participants with kids, the below boxplot was plotted to see the distribution of each type of cost grouped by participants' haveKids status. Education cost is only present for participants who have kids. In addition, Shelter Cost's Mean and median is also appeared to be higher than for participants who have kids as they need to have a larger space as well as a permanent space for a more comfortable living environment for the kids.
+To determine if cost is higher for participants with kids, the below boxplot was plotted to see the distribution of each type of monthly average cost grouped by participants' haveKids status. Education cost is only present for participants who have kids. In addition, average monthly Shelter Cost's Mean and median is also appeared to be higher than for participants who have kids as they need to have a larger space as well as a permanent space for a more comfortable living environment for the kids.
 
 On the flip side, the distribution for Food and Recreation Cost seems to be similar. Participants with kids have a higher median for Recreation Cost, most likely due to the additional cost for children (cheaper than an adult) for all the recreational activities. As for Food, not much difference can be observed between participants with or without kids.
 
 ```{r}
-df_cat1 <- subset(finance_df2, select = -c(timestamp) )
+#Change timestamp to month
+df_cat1 <- finance_df2 %>%
+  mutate(Month = month(timestamp))
 
-# summation of the amount based on ID and category
+# summation of the amount based on ID and category and month
 df_cat2 <- df_cat1 %>%
+  group_by(participantId, category, Month) %>%
+  summarize(sum_amount = sum(amount))
+# To find the monthly average amount
+df_cat2 <- df_cat2 %>%
   group_by(participantId, category) %>%
-  summarize(amount = sum(amount))
+  summarize(average_amount = mean(sum_amount))
 
 # To exclude Wage and RentAdjustment as they are income
 df_cat <- df_cat2[!(df_cat2$category %in% c("Wage","RentAdjustment")), ]
 
 # change negative values to positive so as to be able to show the Cost in positive numbers
-df_cat <- df_cat %>% mutate(across(.cols = c(amount), .fns = abs))
+df_cat <- df_cat %>% mutate(across(.cols = c(average_amount), .fns = abs))
 
 # Join participant demographic data
 joined_df <- inner_join(participants_df2, df_cat, by = "participantId")
 
 #Boxplot
-pp <-ggplot(joined_df, aes(x = haveKids, y = amount, fill = category)) +
+pp <-ggplot(joined_df, aes(x = haveKids, y = average_amount, fill = category)) +
   geom_boxplot() +
   theme_classic() +
-  scale_y_continuous(name = "Cost Amount")
+  scale_y_continuous(name = "Cost Average Amount")
 ggplotly(pp)%>%layout(boxmode = "group")
 ```
 
@@ -189,13 +199,18 @@ The below scatter plot showed the best fit line across the distribution. However
 From a statistical point of view, the p-value computed was less than 0.05, therefore we have sufficient evidence to reject H0 and conclude that there is a correlation between wage cost of living. However, the expectation is different as they are negatively correlated. From the data points, it is observed that there are a significant number of residents who are having a higher cost of living despite having a lower wage, while the top wage earners' cost of living remained below 10000 over the period.
 
 ```{r}
-#Remove timestamp
-df_cat1 <- subset(finance_df2, select = -c(timestamp) )
+#Change timestamp to month
+df_income_cost1 <- finance_df2 %>%
+  mutate(Month = month(timestamp))
 
-# summation of the amount based on ID and category
-df_income_cost1 <- df_cat1 %>%
+# summation of the amount based on ID and category and month
+df_income_cost1 <- df_income_cost1 %>%
+  group_by(participantId, category, Month) %>%
+  summarize(sum_amount = sum(amount))
+# To find the monthly average amount
+df_income_cost1 <- df_income_cost1 %>%
   group_by(participantId, category) %>%
-  summarize(amount = sum(amount))
+  summarize(average_amount = mean(sum_amount))
 
 # To regroup into Income and Cost
 df_income_cost1 <- df_income_cost1 %>%
@@ -206,9 +221,10 @@ df_income_cost1 <- df_income_cost1 %>%
   ))
 df_income_cost1 <- subset(df_income_cost1, select = -c(category) )
 
+# to get the total average income and total average cost
 df_income_cost1 <- df_income_cost1 %>%
   group_by(participantId, Type) %>%
-  summarize(amount = sum(amount))
+  summarize(amount = sum(average_amount))
 
 # change negative values to positive so as to be able to show the Cost in positive numbers
 df_income_cost1 <- df_income_cost1 %>% mutate(across(.cols = c(amount), .fns = abs))
@@ -221,11 +237,13 @@ p_val <- summary(fit)$coefficients[2, 4]
 
 # Create scatter plot with regression line and confidence intervals
 ggscatter(df_income_cost_final, x = "Income", y = "Cost", 
+          title = "Relationship between Average Monthly Income and Cost",
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson", 
           cor.plot = TRUE, cor.coef.digits = 2) +
   stat_regline_equation(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")),
-                       label.x.npc = 0.5, label.y.npc = 0.98) 
+                       label.x.npc = 0.5, label.y.npc = 0.98) +
+  labs(x = "Average Monthly Income", y = "Average Monthly Cost")
           #annotate("text", x = 50000, y = 1000, label = paste("p-value = ", p_val))
 ```
 
@@ -242,13 +260,18 @@ From the below scatterplot, it seemed that they are negatively correlated. To fu
 The test has shown a p-value less than 0.05, therefore we have sufficient evidence to reject H0 and conclude that there is a linear relationship and a negative correlation between the wage income and joviality. Thus, proving that higher wage income does not mean that they are happy with their current state.
 
 ```{r}
-#Remove timestamp
-df_wage1 <- subset(finance_df2, select = -c(timestamp) )
+#Change timestamp to month
+df_wage1 <- finance_df2 %>%
+  mutate(Month = month(timestamp))
 
-# summation of the amount based on ID and category
+# summation of the amount based on ID and category and month
+df_wage1 <- df_wage1 %>%
+  group_by(participantId, category, Month) %>%
+  summarize(sum_amount = sum(amount))
+# To find the monthly average amount
 df_wage1 <- df_wage1 %>%
   group_by(participantId, category) %>%
-  summarize(amount = sum(amount))
+  summarize(average_amount = mean(sum_amount))
 
 # To regroup into Income and Cost
 df_wage1 <- df_wage1 %>%
@@ -261,7 +284,7 @@ df_wage1 <- subset(df_wage1, select = -c(category) )
 
 df_wage1 <- df_wage1 %>%
   group_by(participantId, Type) %>%
-  summarize(amount = sum(amount))
+  summarize(amount = sum(average_amount))
 
 # change negative values to positive so as to be able to show the Cost in positive numbers
 df_wage1 <- df_wage1 %>% mutate(across(.cols = c(amount), .fns = abs))
@@ -277,11 +300,13 @@ p_val <- summary(fit)$coefficients[2, 4]
 
 # Create scatter plot with regression line and confidence intervals
 ggscatter(joined_df, x = "joviality", y = "Income", 
+          title = "Relationship between Average Monthly Income and joviality",
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson", 
           cor.plot = TRUE, cor.coef.digits = 2) +
   stat_regline_equation(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")),
-                       label.x.npc = 0.5, label.y.npc = 0.98) 
+                       label.x.npc = 0.6, label.y.npc = 0.98) +
+  labs(y = "Average Monthly Income")
           #annotate("text", x = 50000, y = 1000, label = paste("p-value = ", p_val))
 ```
 
@@ -296,13 +321,18 @@ we proceed to perform the non-parametric test at 95% confidence interval using t
 #### H1: The average wage income across each education group is not all the same.
 
 ```{r}
-#Remove timestamp
-df_edu1 <- subset(finance_df2, select = -c(timestamp) )
+#Change timestamp to month
+df_edu1 <- finance_df2 %>%
+  mutate(Month = month(timestamp))
 
-# summation of the amount based on ID and category
+# summation of the amount based on ID and category and month
+df_edu1 <- df_edu1 %>%
+  group_by(participantId, category, Month) %>%
+  summarize(sum_amount = sum(amount))
+# To find the monthly average amount
 df_edu1 <- df_edu1 %>%
   group_by(participantId, category) %>%
-  summarize(amount = sum(amount))
+  summarize(average_amount = mean(sum_amount))
 
 # To regroup into Income and Cost
 df_edu1 <- df_edu1 %>%
@@ -315,7 +345,7 @@ df_edu1 <- subset(df_edu1, select = -c(category) )
 
 df_edu1 <- df_edu1 %>%
   group_by(participantId, Type) %>%
-  summarize(amount = sum(amount))
+  summarize(amount = sum(average_amount))
 
 # change negative values to positive so as to be able to show the Cost in positive numbers
 df_edu1 <- df_edu1 %>% mutate(across(.cols = c(amount), .fns = abs))
@@ -329,16 +359,113 @@ ggbetweenstats(
   data = joined_df,
   x    = educationLevel, 
   y    = Income, 
-  type = "nonparametric")
+  type = "nonparametric") +
+  labs(y = "Average Monthly Income")
 ```
 
-The p-value of the Kruskal-Wallis test is lower than 0.05, therefore we have sufficient evidence to reject H0 that the average wage income is similar across different educational groups, and participants with higher education qualification have higher wage income.
+The p-value of the Kruskal-Wallis test is lower than 0.05, therefore we have sufficient evidence to reject H0 that the average wage income is similar across different educational groups, and participants with higher education qualification have a higher average wage income.
+
+## 6.2.5 Interest Groups' Income and Wage Differences
+
+With the availability of the Interest Group information, we are to analyze to observe if there is any particular trend exists based on their interest group.
+
+#### Preprocessing data
+
+```{r}
+#Change timestamp to month
+df_int <- finance_df2 %>%
+  mutate(Month = month(timestamp))
+
+# summation of the amount based on ID and category and month
+df_int <- df_int %>%
+  group_by(participantId, category, Month) %>%
+  summarize(sum_amount = sum(amount))
+# To find the monthly average amount
+df_int <- df_int %>%
+  group_by(participantId, category) %>%
+  summarize(average_amount = mean(sum_amount))
+
+# To regroup into Income and Cost
+df_int <- df_int %>%
+  mutate(Type = case_when(
+    category == "Wage" ~ "Income",
+    category == "RentAdjustment" ~ "Income",
+    TRUE ~ "Cost"
+  ))
+df_int <- subset(df_int, select = -c(category) )
+
+df_int <- df_int %>%
+  group_by(participantId, Type) %>%
+  summarize(amount = sum(average_amount))
+
+# change negative values to positive so as to be able to show the Cost in positive numbers
+df_int <- df_int %>% mutate(across(.cols = c(amount), .fns = abs))
+
+df_int_final <- pivot_wider(df_int, names_from = Type, values_from = amount, values_fn = sum)
+
+# Join participant demographic data
+joined_df_int <- inner_join(participants_df2, df_int_final, by = "participantId")
+```
+
+#### Average Monthly Income vs Interest Group
+
+Based on the graph below, there is no significant trend observed to state that any particular interest group has a higher earning power. Majority of the wage earners are situated roughly around $2,500 across all interest groups. However we can see that the anomaly of super high earners are mainly coming from Interest group I.
+
+```{r}
+ggplot(joined_df_int,
+       aes(x = Income, 
+           y = interestGroup, 
+           fill = factor(stat(quantile))
+           )) +
+  stat_density_ridges(
+    geom = "density_ridges_gradient",
+    calc_ecdf = TRUE, 
+    quantiles = c(0.025, 0.975)
+    ) +
+  scale_fill_manual(
+    name = "Probability",
+    values = c("#FF0000A0", "#A0A0A0A0", "#0000FFA0"),
+    labels = c("(0, 0.025]", "(0.025, 0.975]", "(0.975, 1]")
+  ) +
+  theme_ridges() +
+  labs(x = "Average Monthly Income")
+
+```
+
+#### Average Monthly Cost vs Interest Group
+
+Similarly, there is no significant trend observed to state that any particular interest group has a higher spending cost. All interest have the same number of participants that have a similar average monthly spending cost at $20 and $1,500, the two peak on the graphs. Some super high spenders are observed in Group B, E.
+
+```{r}
+ggplot(joined_df_int,
+       aes(x = Cost, 
+           y = interestGroup, 
+           fill = factor(stat(quantile))
+           )) +
+  stat_density_ridges(
+    geom = "density_ridges_gradient",
+    calc_ecdf = TRUE, 
+    quantiles = c(0.025, 0.975)
+    ) +
+  scale_fill_manual(
+    name = "Probability",
+    values = c("#FF0000A0", "#A0A0A0A0", "#0000FFA0"),
+    labels = c("(0, 0.025]", "(0.025, 0.975]", "(0.975, 1]")
+  ) +
+  theme_ridges() +
+  labs(x = "Average Monthly Cost")
+
+```
+
+Though Group I has super high wage earners, however they do not exhibit a higher spending cost. While the high spenders are located in other interest groups. More information will be needed to understand true interest or trends in the different interest groups.
 
 # 7. Recommendations and Conclusions
 
 ## 7.1 Data recommendations
 
 -   Cost spending do not include the time factor. Without the time factor, it is hard to determine if the spending on recreation/food is worth it. It is hard to gauge the participants' experience over their spending without the time factor
+
+-   To have more information regarding interest group. Labelling of alphabets do not tell us any context of the interest group; hence it is hard to determine the true reasoning behind a certain trend/observation. 
 
 -   To collect the joviality statistics again at the end of the survey to see if the change in spending or income affect the participant's experience.
 
@@ -348,4 +475,4 @@ The p-value of the Kruskal-Wallis test is lower than 0.05, therefore we have suf
 
 ## 7.2 Conclusion
 
-There is no obvious similar trend that is being observed from any of the group that was presented in the dataset (eg. Education level, haveKids, etc). More data (mentioned above) is needed to further substantiate as well as to provide more context towards the participants behavior and characteristics. With the addition of the recommended data, clustering analysis can be carried in the next steps to further analyse and identify groups with similar patterns.
+There is no obvious similar trend that is being observed from any of the group that was presented in the dataset (eg. Interest Group, Education level, haveKids, etc). More data (mentioned above) is needed to further substantiate as well as to provide more context towards the participants behavior and characteristics. With the addition of the recommended data, clustering analysis can be carried in the next steps to further analyse and identify groups with similar patterns.
