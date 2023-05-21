@@ -1,0 +1,254 @@
+---
+title: "Take Home Exercise 2"
+author: "Yap Pin Yaw"
+---
+# 1. Introduction
+With reference to the first point of Tasks and Questions under the Mini-Challenge 2 of VAST Challenge 2023. This webpage will be focusing on using visual analytics to identify temporal patterns for individual entities and between entities in the knowledge graph FishEye created from trade records.
+
+# 2. Methodology & Objective
+
+In order to identify the temporal patterns, I will be using the knowledge graph of MC2 as well as the other relevant fish bundles to observe the relationship between the existing entities.
+
+# 3. Data Preperation
+
+## 3.1 Load & Install Packages
+
+The following code chunk will load and install the necessary packages
+
+```{r}
+pacman:::p_load(jsonlite,tidygraph,ggraph,visNetwork,tidyverse)
+```
+
+## 3.2 Import Data
+Since the raw data obtained from the VAST Challenge are in `json` format, `fromJSON` is being used to extract the data information. All the bundles files are being extracted as well.
+
+```{r}
+MC2 <-fromJSON("data/mc2_challenge_graph.json")
+carp <-fromJSON("data/bundles/carp.json")
+catfish <-fromJSON("data/bundles/catfish.json")
+chub_mackerel <-fromJSON("data/bundles/chub_mackerel.json")
+cod2 <-fromJSON("data/bundles/cod2.json")
+herring <-fromJSON("data/bundles/herring.json")
+lichen <-fromJSON("data/bundles/lichen.json")
+mackerel <-fromJSON("data/bundles/mackerel.json")
+pollock <-fromJSON("data/bundles/pollock.json")
+salmon_wgl <-fromJSON("data/bundles/salmon_wgl.json")
+salmon <-fromJSON("data/bundles/salmon.json")
+shark <-fromJSON("data/bundles/shark.json")
+tuna <-fromJSON("data/bundles/tuna.json")
+```
+
+## 3.3 Nodes & Edges Extraction
+Next we use `as_tibble()` function to turn the nodes and edges from MC2 into a data frame.
+
+### 3.3.1 Nodes
+::: panel-tabset
+## MC2
+```{r}
+MC2_nodes <- as_tibble(MC2$nodes) %>%
+    select (id, shpcountry, rcvcountry)
+```
+
+## Carp
+```{r}
+carp_nodes <- as_tibble(carp$nodes) %>%
+    select (id, shpcountry, rcvcountry)
+```
+
+## Catfish
+```{r}
+catfish_nodes <- as_tibble(catfish$nodes) %>%
+    select (id, shpcountry, rcvcountry)
+```
+
+## Chub_Mackerel
+```{r}
+chub_mackerel_nodes <- as_tibble(chub_mackerel$nodes) %>%
+    select (id, shpcountry, rcvcountry)
+```
+
+## Cod
+```{r}
+cod2_nodes <- as_tibble(cod2$nodes) %>%
+    select (id, shpcountry, rcvcountry)
+```
+
+## Herring
+```{r}
+herring_nodes <- as_tibble(herring$nodes) %>%
+    select (id, shpcountry, rcvcountry)
+```
+
+## Lichen
+```{r}
+lichen_nodes <- as_tibble(lichen$nodes) %>%
+    select (id, shpcountry, rcvcountry)
+```
+
+## Mackerel
+```{r}
+mackerel_nodes <- as_tibble(mackerel$nodes) %>%
+    select (id, shpcountry, rcvcountry)
+```
+
+## Pollock
+```{r}
+pollock_nodes <- as_tibble(pollock$nodes) %>%
+    select (id, shpcountry, rcvcountry)
+```
+
+## Salmon_WGL
+```{r}
+salmon_wgl_nodes <- as_tibble(salmon_wgl$nodes) %>%
+    select (id, shpcountry, rcvcountry)
+```
+
+## Salmon
+```{r}
+salmon_nodes <- as_tibble(salmon$nodes) %>%
+    select (id, shpcountry, rcvcountry)
+```
+
+## Shark
+```{r}
+shark_nodes <- as_tibble(shark$nodes) %>%
+    select (id, shpcountry, rcvcountry)
+```
+
+## Tuna
+```{r}
+tuna_nodes <- as_tibble(tuna$nodes) %>%
+    select (id, shpcountry, rcvcountry)
+```
+:::
+
+### 3.3.1 Edges
+::: panel-tabset
+## MC2
+```{r}
+MC2_edges <- as_tibble(MC2$links) %>%
+    select (source, target, arrivaldate, weightkg, volumeteu, valueofgoods_omu, hscode, valueofgoodsusd)
+```
+
+## Carp
+```{r}
+carp_edges <- as_tibble(carp$links) %>%
+    select (source, target, arrivaldate, weightkg, volumeteu, valueofgoods_omu, hscode)
+```
+
+## Catfish
+```{r}
+catfish_edges <- as_tibble(catfish$links) %>%
+    select (source, target, arrivaldate, valueofgoods_omu, hscode)
+```
+
+## Chub_Mackerel
+```{r}
+chub_mackerel_edges <- as_tibble(chub_mackerel$links) %>%
+    select (source, target, arrivaldate, weightkg, volumeteu, valueofgoods_omu, hscode)
+```
+
+## Cod
+```{r}
+cod2_edges <- as_tibble(cod2$links) %>%
+    select (source, target, arrivaldate, weightkg, volumeteu, valueofgoods_omu, hscode)
+```
+
+## Herring
+```{r}
+herring_edges <- as_tibble(herring$links) %>%
+    select (source, target, arrivaldate, weightkg, volumeteu, valueofgoods_omu, hscode)
+```
+
+## Lichen
+```{r}
+lichen_edges <- as_tibble(lichen$links) %>%
+    select (source, target, arrivaldate, weightkg, volumeteu, valueofgoods_omu, hscode)
+```
+
+## Mackerel
+```{r}
+mackerel_edges <- as_tibble(mackerel$links) %>%
+    select (source, target, arrivaldate, valueofgoods_omu, hscode)
+```
+
+## Pollock
+```{r}
+pollock_edges <- as_tibble(pollock$links) %>%
+    select (source, target, arrivaldate, weightkg, volumeteu, valueofgoods_omu, hscode)
+```
+
+## Salmon_WGL
+```{r}
+salmon_wgl_edges <- as_tibble(salmon_wgl$links) %>%
+    select (source, target, arrivaldate, weightkg, volumeteu, valueofgoods_omu, hscode)
+```
+
+## Salmon
+```{r}
+salmon_edges <- as_tibble(salmon$links) %>%
+    select (source, target, arrivaldate, weightkg, volumeteu, valueofgoods_omu, hscode)
+```
+
+## Shark
+```{r}
+shark_edges <- as_tibble(shark$links) %>%
+    select (source, target, arrivaldate, weightkg, volumeteu, valueofgoods_omu, hscode)
+```
+
+## Tuna
+```{r}
+tuna_edges <- as_tibble(tuna$links) %>%
+    select (source, target, arrivaldate, valueofgoods_omu, hscode)
+```
+:::
+
+::: callout-tip
+`as_tibble()` turns an existing object, such as a data frame or matrix, into a so-called tibble, a data frame with class tbl_df.
+:::
+
+## 3.4 Data Attribute
+
+### 3.4.1 Node Attribute
+Table
+
+### 3.4.2 Edge Attribute
+Table
+
+## 3.5 Data Wrangling
+
+The `lubridate` package is utilized to determine the various types of days for analysis. By using the `wday` function with `label = TRUE` and `abbr = FALSE`, the complete name of the day (e.g., Monday, Tuesday) is obtained. 
+
+```{r}
+MC2_edges <- MC2_edges %>%
+  mutate(ArrivalDate = dmy(arrivaldate)) %>%
+  mutate(Weekday = wday(arrivaldate,
+                        label = TRUE,
+                        abbr = FALSE))
+```
+
+## 3.5 Data Aggregation
+
+Data in `MC2_edge` reveals that it consist of individual entities flow. Aggregation is required to provide a summarise function to find out the frequency of the interaction takes place.
+
+`filter` is being used to only retrieve edges with more than 1 interaction
+
+`group_by` allowed us to get a summarise and count the number of interaction based on the same source, target and Weekday.
+
+```{r}
+MC2_edges_aggregated <- MC2_edges %>%
+  group_by(source, target, Weekday) %>%
+    summarise(Weight = n()) %>%
+  filter(source!=target) %>%
+  filter(Weight > 1) %>%
+  ungroup()
+```
+
+```{r}
+MC2_nodes_aggregated <- MC2_nodes %>%
+  filter(shpcountry!= 'NA') %>%
+  filter(rcvcountry!= 'NA') %>%
+  ungroup()
+MC2_nodes_aggregated
+```
+

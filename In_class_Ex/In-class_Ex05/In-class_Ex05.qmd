@@ -9,11 +9,16 @@ pacman:::p_load(jsonlite,tidygraph,ggraph,visNetwork,tidyverse)
 
 ```{r}
 MC1 <-fromJSON("data/MC1.json")
+MC1
+```
+```{r}
+as_tibble(MC1$links)
 ```
 
 ```{r}
 MC1_nodes <- as_tibble(MC1$nodes) %>%
     select (id, type, country)
+MC1_nodes
 ```
 
 ```{r}

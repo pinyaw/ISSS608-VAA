@@ -409,7 +409,7 @@ joined_df_int <- inner_join(participants_df2, df_int_final, by = "participantId"
 
 #### Average Monthly Income vs Interest Group
 
-Based on the graph below, there is no significant trend observed to state that any particular interest group has a higher earning power. Majority of the wage earners are situated roughly around $2,500 across all interest groups. However we can see that the anomaly of super high earners are mainly coming from Interest group I.
+Based on the graph below, there is no significant trend observed to state that any particular interest group has a higher earning power. Majority of the wage earners are situated roughly around \$2,500 across all interest groups. However we can see that the anomaly of super high earners are mainly coming from Interest group I.
 
 ```{r}
 ggplot(joined_df_int,
@@ -434,7 +434,7 @@ ggplot(joined_df_int,
 
 #### Average Monthly Cost vs Interest Group
 
-Similarly, there is no significant trend observed to state that any particular interest group has a higher spending cost. All interest have the same number of participants that have a similar average monthly spending cost at $20 and $1,500, the two peak on the graphs. Some super high spenders are observed in Group B, E.
+Similarly, there is no significant trend observed to state that any particular interest group has a higher spending cost. All interest have the same number of participants that have a similar average monthly spending cost at \$20 and \$1,500, the two peak on the graphs. Some super high spenders are observed in Group B, E.
 
 ```{r}
 ggplot(joined_df_int,
@@ -465,7 +465,7 @@ Though Group I has super high wage earners, however they do not exhibit a higher
 
 -   Cost spending do not include the time factor. Without the time factor, it is hard to determine if the spending on recreation/food is worth it. It is hard to gauge the participants' experience over their spending without the time factor
 
--   To have more information regarding interest group. Labelling of alphabets do not tell us any context of the interest group; hence it is hard to determine the true reasoning behind a certain trend/observation. 
+-   To have more information regarding interest group. Labelling of alphabets do not tell us any context of the interest group; hence it is hard to determine the true reasoning behind a certain trend/observation.
 
 -   To collect the joviality statistics again at the end of the survey to see if the change in spending or income affect the participant's experience.
 

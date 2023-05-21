@@ -1,0 +1,16 @@
+---
+title: "In-class_Ex06"
+author: "Yap Pin Yaw"
+---
+
+Basic PCP:\
+<https://public.tableau.com/app/profile/pin6699/viz/In-class_Ex06_16845693830970/BasicPCP?publish=yes>\
+\
+Standardised Line Graph:\
+<https://public.tableau.com/app/profile/pin6699/viz/In-class_Ex06_16845693830970/PCPforWorldHappinessScore?publish=yes>\
+\
+HeatMap:\
+<https://public.tableau.com/app/profile/pin6699/viz/In-class_Ex06_HeatMap/Sheet3?publish=yes>\
+\
+TreeMap:\
+<https://public.tableau.com/app/profile/pin6699/viz/TreeMap_16845691344750/TreeMapofNo_ofUnitsbyAreaRegion?publish=yes>
