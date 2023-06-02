@@ -11,6 +11,7 @@ pacman:::p_load(jsonlite,tidygraph,ggraph,visNetwork,tidyverse)
 MC1 <-fromJSON("data/MC1.json")
 MC1
 ```
+
 ```{r}
 as_tibble(MC1$links)
 ```
@@ -24,4 +25,5 @@ MC1_nodes
 ```{r}
 MC1_edges <- as_tibble(MC1$links) %>%
     select (source, target, type, weight, key)
+MC1_edges
 ```

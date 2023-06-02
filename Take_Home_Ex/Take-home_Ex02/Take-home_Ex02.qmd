@@ -1,8 +1,17 @@
 ---
 title: "Take Home Exercise 2"
 author: "Yap Pin Yaw"
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+execute: 
+  warning: false
+editor: visual
 ---
+
 # 1. Introduction
+
 With reference to the first point of Tasks and Questions under the Mini-Challenge 2 of VAST Challenge 2023. This webpage will be focusing on using visual analytics to identify temporal patterns for individual entities and between entities in the knowledge graph FishEye created from trade records.
 
 # 2. Methodology & Objective
@@ -16,239 +25,1504 @@ In order to identify the temporal patterns, I will be using the knowledge graph 
 The following code chunk will load and install the necessary packages
 
 ```{r}
-pacman:::p_load(jsonlite,tidygraph,ggraph,visNetwork,tidyverse)
+#| code-fold: false
+pacman:::p_load(jsonlite, tidygraph, ggraph, visNetwork, lubridate, tidyverse, networkD3, igraph)
 ```
 
 ## 3.2 Import Data
+
 Since the raw data obtained from the VAST Challenge are in `json` format, `fromJSON` is being used to extract the data information. All the bundles files are being extracted as well.
 
 ```{r}
+#| code-fold: false
 MC2 <-fromJSON("data/mc2_challenge_graph.json")
-carp <-fromJSON("data/bundles/carp.json")
-catfish <-fromJSON("data/bundles/catfish.json")
-chub_mackerel <-fromJSON("data/bundles/chub_mackerel.json")
-cod2 <-fromJSON("data/bundles/cod2.json")
-herring <-fromJSON("data/bundles/herring.json")
-lichen <-fromJSON("data/bundles/lichen.json")
-mackerel <-fromJSON("data/bundles/mackerel.json")
-pollock <-fromJSON("data/bundles/pollock.json")
-salmon_wgl <-fromJSON("data/bundles/salmon_wgl.json")
-salmon <-fromJSON("data/bundles/salmon.json")
-shark <-fromJSON("data/bundles/shark.json")
-tuna <-fromJSON("data/bundles/tuna.json")
 ```
 
-## 3.3 Nodes & Edges Extraction
-Next we use `as_tibble()` function to turn the nodes and edges from MC2 into a data frame.
+## 3.3 Data Attribute
 
-### 3.3.1 Nodes
+### 3.3.1 Node Attribute
+
+| Node Name  | Data Type | Description                                                    |
+|-----------------|-----------------|---------------------------------------|
+| id         | chr       | Name of the company that originated (or received) the shipment |
+| shpcountry | chr       | Country the company most often associated with when shipping   |
+| rcvcountry | chr       | Country the company most often associated with when receiving  |
+
+### 3.3.2 Edge Attribute
+
+| Edge Name        | Data Type | Description                                                                                                                                                                                                                                                               |
+|-----------------|-----------------|---------------------------------------|
+| source           | chr       | Name of the company that originated the shipment                                                                                                                                                                                                                          |
+| target           | chr       | Name of the company that received the shipment                                                                                                                                                                                                                            |
+| arrivaldate      | chr       | Date the shipment arrived at port in YYYY-MM-DD format                                                                                                                                                                                                                    |
+| hscode           | chr       | Harmonized System code for the shipment. Can be joined with the hscodes table to get additional details                                                                                                                                                                   |
+| valueofgoods_omu | num       | Customs-declared value of the total shipment, in Oceanus Monetary Units (OMU)                                                                                                                                                                                             |
+| volumeteu        | num       | The volume of the shipment in 'Twenty-foot equivalent units', roughly how many 20-foot standard containers would be required. (Actual number of containers may have been different as there are 20ft and 40ft standard containers and tankers that do not use containers) |
+| weightkg         | int       | The weight of the shipment in kilograms (if known) \## 3.4 Nodes & Edges Extraction                                                                                                                                                                                       |
+| valueofgoodsusd  | num       | valueofgoods_omu in USD                                                                                                                                                                                                                                                   |
+
+## 3.4 Data Extraction
+
+`as_tibble()` function to turn the nodes and edges from MC2 into a data frame.
+
+The `lubridate` package is utilized to determine the various types of days for analysis. In our analysis, `ymd()` is being used to convert `arrivaldate` field from character data type to date data type. While `year()` is being used to extract the only year value based on the arrival date.
+
 ::: panel-tabset
-## MC2
+## Nodes
+
 ```{r}
 MC2_nodes <- as_tibble(MC2$nodes) %>%
-    select (id, shpcountry, rcvcountry)
+    select (id, shpcountry, rcvcountry) %>%
+    distinct()
+MC2_nodes %>%
+    arrange (id)
 ```
 
-## Carp
-```{r}
-carp_nodes <- as_tibble(carp$nodes) %>%
-    select (id, shpcountry, rcvcountry)
-```
+## Edges
 
-## Catfish
-```{r}
-catfish_nodes <- as_tibble(catfish$nodes) %>%
-    select (id, shpcountry, rcvcountry)
-```
-
-## Chub_Mackerel
-```{r}
-chub_mackerel_nodes <- as_tibble(chub_mackerel$nodes) %>%
-    select (id, shpcountry, rcvcountry)
-```
-
-## Cod
-```{r}
-cod2_nodes <- as_tibble(cod2$nodes) %>%
-    select (id, shpcountry, rcvcountry)
-```
-
-## Herring
-```{r}
-herring_nodes <- as_tibble(herring$nodes) %>%
-    select (id, shpcountry, rcvcountry)
-```
-
-## Lichen
-```{r}
-lichen_nodes <- as_tibble(lichen$nodes) %>%
-    select (id, shpcountry, rcvcountry)
-```
-
-## Mackerel
-```{r}
-mackerel_nodes <- as_tibble(mackerel$nodes) %>%
-    select (id, shpcountry, rcvcountry)
-```
-
-## Pollock
-```{r}
-pollock_nodes <- as_tibble(pollock$nodes) %>%
-    select (id, shpcountry, rcvcountry)
-```
-
-## Salmon_WGL
-```{r}
-salmon_wgl_nodes <- as_tibble(salmon_wgl$nodes) %>%
-    select (id, shpcountry, rcvcountry)
-```
-
-## Salmon
-```{r}
-salmon_nodes <- as_tibble(salmon$nodes) %>%
-    select (id, shpcountry, rcvcountry)
-```
-
-## Shark
-```{r}
-shark_nodes <- as_tibble(shark$nodes) %>%
-    select (id, shpcountry, rcvcountry)
-```
-
-## Tuna
-```{r}
-tuna_nodes <- as_tibble(tuna$nodes) %>%
-    select (id, shpcountry, rcvcountry)
-```
-:::
-
-### 3.3.1 Edges
-::: panel-tabset
-## MC2
 ```{r}
 MC2_edges <- as_tibble(MC2$links) %>%
-    select (source, target, arrivaldate, weightkg, volumeteu, valueofgoods_omu, hscode, valueofgoodsusd)
-```
+    mutate(ArrivalDate = ymd(arrivaldate)) %>%
+    mutate(Year = year(ArrivalDate)) %>%
+    select(source, target, ArrivalDate, Year, hscode, valueofgoods_omu, 
+         volumeteu, weightkg, valueofgoodsusd) %>% 
+    # to remove those are without values
+    filter(!is.na(valueofgoods_omu) | !is.na(valueofgoodsusd)) %>% 
+    distinct()
 
-## Carp
-```{r}
-carp_edges <- as_tibble(carp$links) %>%
-    select (source, target, arrivaldate, weightkg, volumeteu, valueofgoods_omu, hscode)
-```
-
-## Catfish
-```{r}
-catfish_edges <- as_tibble(catfish$links) %>%
-    select (source, target, arrivaldate, valueofgoods_omu, hscode)
-```
-
-## Chub_Mackerel
-```{r}
-chub_mackerel_edges <- as_tibble(chub_mackerel$links) %>%
-    select (source, target, arrivaldate, weightkg, volumeteu, valueofgoods_omu, hscode)
-```
-
-## Cod
-```{r}
-cod2_edges <- as_tibble(cod2$links) %>%
-    select (source, target, arrivaldate, weightkg, volumeteu, valueofgoods_omu, hscode)
-```
-
-## Herring
-```{r}
-herring_edges <- as_tibble(herring$links) %>%
-    select (source, target, arrivaldate, weightkg, volumeteu, valueofgoods_omu, hscode)
-```
-
-## Lichen
-```{r}
-lichen_edges <- as_tibble(lichen$links) %>%
-    select (source, target, arrivaldate, weightkg, volumeteu, valueofgoods_omu, hscode)
-```
-
-## Mackerel
-```{r}
-mackerel_edges <- as_tibble(mackerel$links) %>%
-    select (source, target, arrivaldate, valueofgoods_omu, hscode)
-```
-
-## Pollock
-```{r}
-pollock_edges <- as_tibble(pollock$links) %>%
-    select (source, target, arrivaldate, weightkg, volumeteu, valueofgoods_omu, hscode)
-```
-
-## Salmon_WGL
-```{r}
-salmon_wgl_edges <- as_tibble(salmon_wgl$links) %>%
-    select (source, target, arrivaldate, weightkg, volumeteu, valueofgoods_omu, hscode)
-```
-
-## Salmon
-```{r}
-salmon_edges <- as_tibble(salmon$links) %>%
-    select (source, target, arrivaldate, weightkg, volumeteu, valueofgoods_omu, hscode)
-```
-
-## Shark
-```{r}
-shark_edges <- as_tibble(shark$links) %>%
-    select (source, target, arrivaldate, weightkg, volumeteu, valueofgoods_omu, hscode)
-```
-
-## Tuna
-```{r}
-tuna_edges <- as_tibble(tuna$links) %>%
-    select (source, target, arrivaldate, valueofgoods_omu, hscode)
+# Replace NULL values with a specific value
+replacement_value <- "NA"
+MC2_edges <- replace(MC2_edges, is.null(MC2_edges), replacement_value)
+MC2_edges
 ```
 :::
 
 ::: callout-tip
-`as_tibble()` turns an existing object, such as a data frame or matrix, into a so-called tibble, a data frame with class tbl_df.
+`as_tibble()` turns an existing object, such as a data frame or matrix, into a so-called tibble, a data frame with class tbl_df
+
+`select()` is used not only to select the field needed but also to re-organise the sequence of the fields
 :::
 
-## 3.4 Data Attribute
+## 3.5 Data Wrangling & Aggregation
 
-### 3.4.1 Node Attribute
-Table
+### 3.5.1 Preparing the edges
 
-### 3.4.2 Edge Attribute
-Table
+Due to the scale of the network from MC2 data, the direction in this exercise will only be focusing on the top hscodes across the years and explore the pattern change.
 
-## 3.5 Data Wrangling
+#### 3.5.1.1 Years Available
 
-The `lubridate` package is utilized to determine the various types of days for analysis. By using the `wday` function with `label = TRUE` and `abbr = FALSE`, the complete name of the day (e.g., Monday, Tuesday) is obtained. 
+First we identify the Years that are present in the data.
 
 ```{r}
-MC2_edges <- MC2_edges %>%
-  mutate(ArrivalDate = dmy(arrivaldate)) %>%
-  mutate(Weekday = wday(arrivaldate,
-                        label = TRUE,
-                        abbr = FALSE))
+sort(unique(MC2_edges$Year))
 ```
 
-## 3.5 Data Aggregation
+#### 3.5.1.2 Edges Filter only by Year
 
-Data in `MC2_edge` reveals that it consist of individual entities flow. Aggregation is required to provide a summarise function to find out the frequency of the interaction takes place.
+With the above information, next we looked into aggregate the data set by using `filter`to obtain each of the years data separately (from 2028 till 2034), followed by `group_by` function to get the count of occurrence (higher weight = higher transaction occurred).
 
-`filter` is being used to only retrieve edges with more than 1 interaction
-
-`group_by` allowed us to get a summarise and count the number of interaction based on the same source, target and Weekday.
+::: panel-tabset
+## 2028
 
 ```{r}
-MC2_edges_aggregated <- MC2_edges %>%
-  group_by(source, target, Weekday) %>%
-    summarise(Weight = n()) %>%
+#| code-fold: false
+MC2_edges_aggregated_2028 <- MC2_edges %>%
+  filter(Year == "2028") %>%
+  group_by(source, target, hscode, Year) %>%
+    summarise(weights = n()) %>%
   filter(source!=target) %>%
-  filter(Weight > 1) %>%
   ungroup()
 ```
 
+## 2029
+
 ```{r}
-MC2_nodes_aggregated <- MC2_nodes %>%
-  filter(shpcountry!= 'NA') %>%
-  filter(rcvcountry!= 'NA') %>%
+#| code-fold: false
+MC2_edges_aggregated_2029<- MC2_edges %>%
+  filter(Year == "2029") %>%
+  group_by(source, target, hscode, Year) %>%
+    summarise(weights = n()) %>%
+  filter(source!=target) %>%
   ungroup()
-MC2_nodes_aggregated
 ```
+
+## 2030
+
+```{r}
+#| code-fold: false
+MC2_edges_aggregated_2030 <- MC2_edges %>%
+  filter(Year == "2030") %>%
+  group_by(source, target, hscode, Year) %>%
+    summarise(weights = n()) %>%
+  filter(source!=target) %>%
+  ungroup()
+```
+
+## 2031
+
+```{r}
+#| code-fold: false
+MC2_edges_aggregated_2031 <- MC2_edges %>%
+  filter(Year == "2031") %>%
+  group_by(source, target, hscode, Year) %>%
+    summarise(weights = n()) %>%
+  filter(source!=target) %>%
+  ungroup()
+```
+
+## 2032
+
+```{r}
+#| code-fold: false
+MC2_edges_aggregated_2032 <- MC2_edges %>%
+  filter(Year == "2032") %>%
+  group_by(source, target, hscode, Year) %>%
+    summarise(weights = n()) %>%
+  filter(source!=target) %>%
+  ungroup()
+```
+
+## 2033
+
+```{r}
+#| code-fold: false
+MC2_edges_aggregated_2033 <- MC2_edges %>%
+  filter(Year == "2033") %>%
+  group_by(source, target, hscode, Year) %>%
+    summarise(weights = n()) %>%
+  filter(source!=target) %>%
+  ungroup()
+```
+
+## 2034
+
+```{r}
+#| code-fold: false
+MC2_edges_aggregated_2034 <- MC2_edges %>%
+  filter(Year == "2034") %>%
+  group_by(source, target, hscode, Year) %>%
+    summarise(weights = n()) %>%
+  filter(source!=target) %>%
+  ungroup()
+```
+:::
+
+#### 3.5.1.3 Top hscodes selection across the years
+
+Moving forward, we used the aggregated data to obtain the top 5 source-target pair with the highest weight count so as to filter our analysis further to check of any patterns observed.
+
+::: panel-tabset
+## 2028
+
+```{r}
+MC2_edges_aggregated_2028_top5 <-
+head(MC2_edges_aggregated_2028$hscode[order(MC2_edges_aggregated_2028$weights, decreasing = TRUE)],5)
+MC2_edges_aggregated_2028_top5
+```
+
+## 2029
+
+```{r}
+MC2_edges_aggregated_2029_top5 <- head(MC2_edges_aggregated_2029$hscode[order(MC2_edges_aggregated_2029$weights, decreasing = TRUE)],5)
+MC2_edges_aggregated_2029_top5
+```
+
+## 2030
+
+```{r}
+MC2_edges_aggregated_2030_top5 <-
+head(MC2_edges_aggregated_2030$hscode[order(MC2_edges_aggregated_2030$weights, decreasing = TRUE)],5)
+MC2_edges_aggregated_2030_top5
+```
+
+## 2031
+
+```{r}
+MC2_edges_aggregated_2031_top5 <-
+head(MC2_edges_aggregated_2031$hscode[order(MC2_edges_aggregated_2031$weights, decreasing = TRUE)],5)
+MC2_edges_aggregated_2031_top5
+```
+
+## 2032
+
+```{r}
+MC2_edges_aggregated_2032_top5 <-
+head(MC2_edges_aggregated_2032$hscode[order(MC2_edges_aggregated_2032$weights, decreasing = TRUE)],5)
+MC2_edges_aggregated_2032_top5
+```
+
+## 2033
+
+```{r}
+MC2_edges_aggregated_2033_top5 <-
+head(MC2_edges_aggregated_2033$hscode[order(MC2_edges_aggregated_2033$weights, decreasing = TRUE)],5)
+MC2_edges_aggregated_2033_top5
+```
+
+## 2034
+
+```{r}
+MC2_edges_aggregated_2034_top5 <-
+head(MC2_edges_aggregated_2034$hscode[order(MC2_edges_aggregated_2034$weights, decreasing = TRUE)],5)
+MC2_edges_aggregated_2034_top5
+```
+:::
+
+The top 5 hscodes are then being placed together to form a dataframe.
+
+```{r}
+MC2_edges_aggregated_top5 <- rbind(MC2_edges_aggregated_2028_top5
+                                   , MC2_edges_aggregated_2029_top5
+                                   , MC2_edges_aggregated_2030_top5
+                                   , MC2_edges_aggregated_2031_top5
+                                   , MC2_edges_aggregated_2032_top5
+                                   , MC2_edges_aggregated_2033_top5
+                                   , MC2_edges_aggregated_2034_top5) 
+MC2_edges_aggregated_top5
+```
+
+#### 3.5.1.4 Find the count of each value across columns
+
+To identify which hscode has the highest occurrence, `unlist` are used to flatten the dataframe `MC2_edges_aggregated_2028_top5` into a single vector (`flat_data`).
+
+Next, we apply the `table` function to `flat_data` to create a frequency table of the unique values, counting their occurrences across the entire dataframe. The resulting counts are stored in the counts variable.
+
+Finally, we print the counts to see the count of each value across the entire dataframe. The output will display a table with rows representing unique values and the corresponding counts.
+
+```{r}
+#| code-fold: false
+# Flatten the dataframe into a single vector
+flat_data <- unlist(MC2_edges_aggregated_top5)
+
+# Find the count of each value across the entire dataframe
+counts <- table(flat_data)
+
+# Print the counts
+print(counts)
+```
+
+From the above result, we are able to conclude that hscode (304620 : 16 , 630900 : 5) are the top 2 across the years. Therefore, we can filter the data further to explore the pattern network changes across the year.
+
+#### 3.5.1.5 Edges Filter by hscode and Year
+
+With the information of the top 2 hscode, the data edges are being re-aggregated with the additional filter of hscode and year.
+
+::: panel-tabset
+### 2028
+
+```{r}
+#| code-fold: false
+# HSCODE: 304620
+MC2_edges_aggregated_2028_1 <- MC2_edges %>%
+  filter(hscode == "304620" & Year == "2028") %>%
+  group_by(source, target, hscode, Year) %>%
+    summarise(weights = n()) %>%
+  filter(source!=target) %>%
+  ungroup()
+
+# HSCODE: 630900
+MC2_edges_aggregated_2028_2 <- MC2_edges %>%
+  filter(hscode == "630900" & Year == "2028") %>%
+  group_by(source, target, hscode, Year) %>%
+    summarise(weights = n()) %>%
+  filter(source!=target) %>%
+  ungroup()
+```
+
+### 2029
+
+```{r}
+#| code-fold: false
+# HSCODE: 304620
+MC2_edges_aggregated_2029_1 <- MC2_edges %>%
+  filter(hscode == "304620" & Year == "2029") %>%
+  group_by(source, target, hscode, Year) %>%
+    summarise(weights = n()) %>%
+  filter(source!=target) %>%
+  ungroup()
+
+# HSCODE: 630900
+MC2_edges_aggregated_2029_2 <- MC2_edges %>%
+  filter(hscode == "630900" & Year == "2029") %>%
+  group_by(source, target, hscode, Year) %>%
+    summarise(weights = n()) %>%
+  filter(source!=target) %>%
+  ungroup()
+```
+
+### 2030
+
+```{r}
+#| code-fold: false
+# HSCODE: 304620
+MC2_edges_aggregated_2030_1 <- MC2_edges %>%
+  filter(hscode == "304620" & Year == "2030") %>%
+  group_by(source, target, hscode, Year) %>%
+    summarise(weights = n()) %>%
+  filter(source!=target) %>%
+  ungroup()
+
+# HSCODE: 630900
+MC2_edges_aggregated_2030_2 <- MC2_edges %>%
+  filter(hscode == "630900" & Year == "2030") %>%
+  group_by(source, target, hscode, Year) %>%
+    summarise(weights = n()) %>%
+  filter(source!=target) %>%
+  ungroup()
+```
+
+### 2031
+
+```{r}
+#| code-fold: false
+# HSCODE: 304620
+MC2_edges_aggregated_2031_1 <- MC2_edges %>%
+  filter(hscode == "304620" & Year == "2031") %>%
+  group_by(source, target, hscode, Year) %>%
+    summarise(weights = n()) %>%
+  filter(source!=target) %>%
+  ungroup()
+
+# HSCODE: 630900
+MC2_edges_aggregated_2031_2 <- MC2_edges %>%
+  filter(hscode == "630900" & Year == "2031") %>%
+  group_by(source, target, hscode, Year) %>%
+    summarise(weights = n()) %>%
+  filter(source!=target) %>%
+  ungroup()
+```
+
+### 2032
+
+```{r}
+#| code-fold: false
+# HSCODE: 304620
+MC2_edges_aggregated_2032_1 <- MC2_edges %>%
+  filter(hscode == "304620" & Year == "2032") %>%
+  group_by(source, target, hscode, Year) %>%
+    summarise(weights = n()) %>%
+  filter(source!=target) %>%
+  ungroup()
+
+# HSCODE: 630900
+MC2_edges_aggregated_2032_2 <- MC2_edges %>%
+  filter(hscode == "630900" & Year == "2032") %>%
+  group_by(source, target, hscode, Year) %>%
+    summarise(weights = n()) %>%
+  filter(source!=target) %>%
+  ungroup()
+```
+
+### 2033
+
+```{r}
+#| code-fold: false
+# HSCODE: 304620
+MC2_edges_aggregated_2033_1 <- MC2_edges %>%
+  filter(hscode == "304620" & Year == "2033") %>%
+  group_by(source, target, hscode, Year) %>%
+    summarise(weights = n()) %>%
+  filter(source!=target) %>%
+  ungroup()
+
+# HSCODE: 630900
+MC2_edges_aggregated_2033_2 <- MC2_edges %>%
+  filter(hscode == "630900" & Year == "2033") %>%
+  group_by(source, target, hscode, Year) %>%
+    summarise(weights = n()) %>%
+  filter(source!=target) %>%
+  ungroup()
+```
+
+### 2034
+
+```{r}
+#| code-fold: false
+# HSCODE: 304620
+MC2_edges_aggregated_2034_1 <- MC2_edges %>%
+  filter(hscode == "304620" & Year == "2034") %>%
+  group_by(source, target, hscode, Year) %>%
+    summarise(weights = n()) %>%
+  filter(source!=target) %>%
+  ungroup()
+
+# HSCODE: 630900
+MC2_edges_aggregated_2034_2 <- MC2_edges %>%
+  filter(hscode == "630900" & Year == "2034") %>%
+  group_by(source, target, hscode, Year) %>%
+    summarise(weights = n()) %>%
+  filter(source!=target) %>%
+  ungroup()
+```
+
+### All edges
+
+```{r}
+#| code-fold: false
+# HSCODE: 304620
+MC2_edges_combined_1 <- rbind(MC2_edges_aggregated_2028_1
+                            , MC2_edges_aggregated_2029_1
+                            , MC2_edges_aggregated_2030_1
+                            , MC2_edges_aggregated_2031_1
+                            , MC2_edges_aggregated_2032_1
+                            , MC2_edges_aggregated_2033_1
+                            , MC2_edges_aggregated_2034_1)
+
+# HSCODE: 630900
+MC2_edges_combined_2 <- rbind(MC2_edges_aggregated_2028_2
+                            , MC2_edges_aggregated_2029_2
+                            , MC2_edges_aggregated_2030_2
+                            , MC2_edges_aggregated_2031_2
+                            , MC2_edges_aggregated_2032_2
+                            , MC2_edges_aggregated_2033_2
+                            , MC2_edges_aggregated_2034_2)
+```
+:::
+
+### 3.5.2 Preparing the nodes
+
+Next, nodes are to be prepared based on the readied aggregated edges set.
+
+::: panel-tabset
+### 2028
+
+```{r}
+#| code-fold: false
+# HSCODE: 304620
+id1 <- MC2_edges_aggregated_2028_1 %>%
+  select(source) %>%
+  rename(id = source)
+id2 <- MC2_edges_aggregated_2028_1 %>%
+  select(target) %>%
+  rename(id = target)
+MC2_nodes_aggregated_2028_1 <- rbind(id1, id2) %>%
+  distinct()
+
+# HSCODE: 630900
+id1 <- MC2_edges_aggregated_2028_2 %>%
+  select(source) %>%
+  rename(id = source)
+id2 <- MC2_edges_aggregated_2028_2 %>%
+  select(target) %>%
+  rename(id = target)
+MC2_nodes_aggregated_2028_2 <- rbind(id1, id2) %>%
+  distinct()
+```
+
+### 2029
+
+```{r}
+#| code-fold: false
+# HSCODE: 304620
+id1 <- MC2_edges_aggregated_2029_1 %>%
+  select(source) %>%
+  rename(id = source)
+id2 <- MC2_edges_aggregated_2029_1 %>%
+  select(target) %>%
+  rename(id = target)
+MC2_nodes_aggregated_2029_1 <- rbind(id1, id2) %>%
+  distinct()
+
+# HSCODE: 630900
+id1 <- MC2_edges_aggregated_2029_2 %>%
+  select(source) %>%
+  rename(id = source)
+id2 <- MC2_edges_aggregated_2029_2 %>%
+  select(target) %>%
+  rename(id = target)
+MC2_nodes_aggregated_2029_2 <- rbind(id1, id2) %>%
+  distinct()
+```
+
+### 2030
+
+```{r}
+#| code-fold: false
+# HSCODE: 304620
+id1 <- MC2_edges_aggregated_2030_1 %>%
+  select(source) %>%
+  rename(id = source)
+id2 <- MC2_edges_aggregated_2030_1 %>%
+  select(target) %>%
+  rename(id = target)
+MC2_nodes_aggregated_2030_1 <- rbind(id1, id2) %>%
+  distinct()
+
+# HSCODE: 630900
+id1 <- MC2_edges_aggregated_2030_2 %>%
+  select(source) %>%
+  rename(id = source)
+id2 <- MC2_edges_aggregated_2030_2 %>%
+  select(target) %>%
+  rename(id = target)
+MC2_nodes_aggregated_2030_2 <- rbind(id1, id2) %>%
+  distinct()
+```
+
+### 2031
+
+```{r}
+#| code-fold: false
+# HSCODE: 304620
+id1 <- MC2_edges_aggregated_2031_1 %>%
+  select(source) %>%
+  rename(id = source)
+id2 <- MC2_edges_aggregated_2031_1 %>%
+  select(target) %>%
+  rename(id = target)
+MC2_nodes_aggregated_2031_1 <- rbind(id1, id2) %>%
+  distinct()
+
+# HSCODE: 630900
+id1 <- MC2_edges_aggregated_2031_2 %>%
+  select(source) %>%
+  rename(id = source)
+id2 <- MC2_edges_aggregated_2031_2 %>%
+  select(target) %>%
+  rename(id = target)
+MC2_nodes_aggregated_2031_2 <- rbind(id1, id2) %>%
+  distinct()
+```
+
+### 2032
+
+```{r}
+#| code-fold: false
+# HSCODE: 304620
+id1 <- MC2_edges_aggregated_2032_1 %>%
+  select(source) %>%
+  rename(id = source)
+id2 <- MC2_edges_aggregated_2032_1 %>%
+  select(target) %>%
+  rename(id = target)
+MC2_nodes_aggregated_2032_1 <- rbind(id1, id2) %>%
+  distinct()
+
+# HSCODE: 630900
+id1 <- MC2_edges_aggregated_2032_2 %>%
+  select(source) %>%
+  rename(id = source)
+id2 <- MC2_edges_aggregated_2032_2 %>%
+  select(target) %>%
+  rename(id = target)
+MC2_nodes_aggregated_2032_2 <- rbind(id1, id2) %>%
+  distinct()
+```
+
+### 2033
+
+```{r}
+#| code-fold: false
+# HSCODE: 304620
+id1 <- MC2_edges_aggregated_2033_1 %>%
+  select(source) %>%
+  rename(id = source)
+id2 <- MC2_edges_aggregated_2033_1 %>%
+  select(target) %>%
+  rename(id = target)
+MC2_nodes_aggregated_2033_1 <- rbind(id1, id2) %>%
+  distinct()
+
+# HSCODE: 630900
+id1 <- MC2_edges_aggregated_2033_2 %>%
+  select(source) %>%
+  rename(id = source)
+id2 <- MC2_edges_aggregated_2033_2 %>%
+  select(target) %>%
+  rename(id = target)
+MC2_nodes_aggregated_2033_2 <- rbind(id1, id2) %>%
+  distinct()
+```
+
+### 2034
+
+```{r}
+#| code-fold: false
+# HSCODE: 304620
+id1 <- MC2_edges_aggregated_2034_1 %>%
+  select(source) %>%
+  rename(id = source)
+id2 <- MC2_edges_aggregated_2034_1 %>%
+  select(target) %>%
+  rename(id = target)
+MC2_nodes_aggregated_2034_1 <- rbind(id1, id2) %>%
+  distinct()
+
+# HSCODE: 630900
+id1 <- MC2_edges_aggregated_2034_2 %>%
+  select(source) %>%
+  rename(id = source)
+id2 <- MC2_edges_aggregated_2034_2 %>%
+  select(target) %>%
+  rename(id = target)
+MC2_nodes_aggregated_2034_2 <- rbind(id1, id2) %>%
+  distinct()
+```
+
+### All nodes
+
+```{r}
+#| code-fold: false
+# HSCODE: 304620
+MC2_nodes_combined_1 <- rbind(MC2_nodes_aggregated_2028_1
+                            , MC2_nodes_aggregated_2029_1
+                            , MC2_nodes_aggregated_2030_1
+                            , MC2_nodes_aggregated_2031_1
+                            , MC2_nodes_aggregated_2032_1
+                            , MC2_nodes_aggregated_2033_1
+                            , MC2_nodes_aggregated_2034_1) %>%
+                        distinct()
+
+# HSCODE: 630900
+MC2_nodes_combined_2 <- rbind(MC2_nodes_aggregated_2028_2
+                            , MC2_nodes_aggregated_2029_2
+                            , MC2_nodes_aggregated_2030_2
+                            , MC2_nodes_aggregated_2031_2
+                            , MC2_nodes_aggregated_2032_2
+                            , MC2_nodes_aggregated_2033_2
+                            , MC2_nodes_aggregated_2034_2) %>%
+                        distinct()
+```
+:::
+
+# 4. Visualization & Data Analysis
+
+## 4.1 Using tidygraph to plot the network
+
+The code chunk below is then used to build the tidy graph data model.
+
+::: panel-tabset
+## hscode: 304620
+
+::: panel-tabset
+### 2028
+
+```{r}
+#| code-fold: false
+MC2_graph_2028_1 <- tbl_graph(nodes = MC2_nodes_aggregated_2028_1,
+                           edges = MC2_edges_aggregated_2028_1, 
+                           directed = TRUE)
+```
+
+### 2029
+
+```{r}
+#| code-fold: false
+MC2_graph_2029_1 <- tbl_graph(nodes = MC2_nodes_aggregated_2029_1,
+                           edges = MC2_edges_aggregated_2029_1, 
+                           directed = TRUE)
+```
+
+### 2030
+
+```{r}
+#| code-fold: false
+MC2_graph_2030_1 <- tbl_graph(nodes = MC2_nodes_aggregated_2030_1,
+                           edges = MC2_edges_aggregated_2030_1, 
+                           directed = TRUE)
+```
+
+### 2031
+
+```{r}
+#| code-fold: false
+MC2_graph_2031_1 <- tbl_graph(nodes = MC2_nodes_aggregated_2031_1,
+                           edges = MC2_edges_aggregated_2031_1, 
+                           directed = TRUE)
+```
+
+### 2032
+
+```{r}
+#| code-fold: false
+MC2_graph_2032_1 <- tbl_graph(nodes = MC2_nodes_aggregated_2032_1,
+                           edges = MC2_edges_aggregated_2032_1, 
+                           directed = TRUE)
+```
+
+### 2033
+
+```{r}
+#| code-fold: false
+MC2_graph_2033_1 <- tbl_graph(nodes = MC2_nodes_aggregated_2033_1,
+                           edges = MC2_edges_aggregated_2033_1, 
+                           directed = TRUE)
+```
+
+### 2034
+
+```{r}
+#| code-fold: false
+MC2_graph_2034_1 <- tbl_graph(nodes = MC2_nodes_aggregated_2034_1,
+                           edges = MC2_edges_aggregated_2034_1, 
+                           directed = TRUE)
+```
+
+### All combined
+
+```{r}
+#| code-fold: false
+MC2_graph_combined_1 <- tbl_graph(nodes = MC2_nodes_combined_1,
+                           edges = MC2_edges_combined_1, 
+                           directed = TRUE)
+```
+:::
+
+## hscode: 630900
+
+::: panel-tabset
+### 2028
+
+```{r}
+#| code-fold: false
+MC2_graph_2028_2 <- tbl_graph(nodes = MC2_nodes_aggregated_2028_2,
+                           edges = MC2_edges_aggregated_2028_2, 
+                           directed = TRUE)
+```
+
+### 2029
+
+```{r}
+#| code-fold: false
+MC2_graph_2029_2 <- tbl_graph(nodes = MC2_nodes_aggregated_2029_2,
+                           edges = MC2_edges_aggregated_2029_2, 
+                           directed = TRUE)
+```
+
+### 2030
+
+```{r}
+#| code-fold: false
+MC2_graph_2030_2 <- tbl_graph(nodes = MC2_nodes_aggregated_2030_2,
+                           edges = MC2_edges_aggregated_2030_2, 
+                           directed = TRUE)
+```
+
+### 2031
+
+```{r}
+#| code-fold: false
+MC2_graph_2031_2 <- tbl_graph(nodes = MC2_nodes_aggregated_2031_2,
+                           edges = MC2_edges_aggregated_2031_2, 
+                           directed = TRUE)
+```
+
+### 2032
+
+```{r}
+#| code-fold: false
+MC2_graph_2032_2 <- tbl_graph(nodes = MC2_nodes_aggregated_2032_2,
+                           edges = MC2_edges_aggregated_2032_2, 
+                           directed = TRUE)
+```
+
+### 2033
+
+```{r}
+#| code-fold: false
+MC2_graph_2033_2 <- tbl_graph(nodes = MC2_nodes_aggregated_2033_2,
+                           edges = MC2_edges_aggregated_2033_2, 
+                           directed = TRUE)
+```
+
+### 2034
+
+```{r}
+#| code-fold: false
+MC2_graph_2034_2 <- tbl_graph(nodes = MC2_nodes_aggregated_2034_2,
+                           edges = MC2_edges_aggregated_2034_2, 
+                           directed = TRUE)
+```
+
+### All Combined
+
+```{r}
+#| code-fold: false
+MC2_graph_combined_2 <- tbl_graph(nodes = MC2_nodes_combined_2,
+                           edges = MC2_edges_combined_2, 
+                           directed = TRUE)
+```
+:::
+:::
+
+## 4.2 Network Graph
+
+In order to narrow down the analysis and prioritize the most influential individuals within the interaction, the attention is being placed on the top 10% of vertices based on their eigenvector centrality score. Eigenvector centrality is a measure of the relative importance of each vertex in a graph based on its connections to other highly connected vertices. By identifying the quantile threshold using the quantile function applied to the `eigen_centrality` values of the graph, we can determine which vertices fall within the top 10% range.
+
+Once we have identified these key vertices, we will remove the remaining vertices from the graph using the `delete_vertices` function. This step helps to streamline the visualization and analysis by excluding less influential individuals and reducing the complexity of the graph.
+
+To present the resulting graph visually, the Fruchterman-Reingold layout algorithm `layout_with_fr` is being employed, which is commonly used for network graph visualization. This layout algorithm arranges the vertices in a way that minimizes the edge crossings and evenly distributes the vertices based on their connections.
+
+In addition, to ensure reproducibility of the plot, the `set.seed` function is being used to recreate the same layout each time the graph is generated.
+
+By focusing on the top 10% vertices based on eigenvector centrality, removing less influential vertices, and utilizing an effective layout algorithm, we can better understand the most influential individuals within the interaction network and facilitate a more focused analysis.
+
+::: panel-tabset
+## hscode: 304620
+
+::: panel-tabset
+### 2028
+
+```{r}
+set.seed (1234)
+
+top10_graph <- quantile(eigen_centrality(MC2_graph_2028_1)$vector,probs = seq(0, 1, 1/10))
+         
+V(MC2_graph_2028_1)$size = eigen_centrality(MC2_graph_2028_1)$vector
+
+agg_graph <- delete_vertices(MC2_graph_2028_1, V(MC2_graph_2028_1)[size < top10_graph[10]])
+
+layout1 <- layout_with_fr(agg_graph)
+
+quantile_graph_aggregated <- quantile(V(agg_graph)$size, probs = seq(0, 1, 1/10))
+
+# To identify the high centrality nodes 
+V(agg_graph)$color <- ifelse (V(agg_graph)$size > quantile_graph_aggregated[10], "orangered", "skyblue")
+E(agg_graph)$color <- "grey"
+V(agg_graph)$size <- V(agg_graph)$size/0.05 
+V(agg_graph)$label <- ifelse (V(agg_graph)$size*0.05 > quantile_graph_aggregated[10],V(agg_graph)$id,NA)
+
+plot(agg_graph, edge.arrow.size=0.35,edge.arrow.mode = "-", vertex.label = V(agg_graph)$label, vertex.label.cex = 0.5, vertex.label.font = 2, main = "HSCODE 304620 - Eigenvector centrality graph" ) 
+
+```
+
+Below are the nodes that are the top 10% nodes in terms of eigenvector centrality score:
+
+```{r}
+(V(agg_graph)$label[!is.na(V(agg_graph)$label)])
+```
+
+### 2029
+
+```{r}
+set.seed (1234)
+
+top10_graph <- quantile(eigen_centrality(MC2_graph_2029_1)$vector,probs = seq(0, 1, 1/10))
+         
+V(MC2_graph_2029_1)$size = eigen_centrality(MC2_graph_2029_1)$vector
+
+agg_graph <- delete_vertices(MC2_graph_2029_1, V(MC2_graph_2029_1)[size < top10_graph[10]])
+
+layout1 <- layout_with_fr(agg_graph)
+
+quantile_graph_aggregated <- quantile(V(agg_graph)$size, probs = seq(0, 1, 1/10))
+
+# To identify the high centrality nodes 
+V(agg_graph)$color <- ifelse (V(agg_graph)$size > quantile_graph_aggregated[10], "orangered", "skyblue")
+E(agg_graph)$color <- "grey"
+V(agg_graph)$size <- V(agg_graph)$size/0.05 
+V(agg_graph)$label <- ifelse (V(agg_graph)$size*0.05 > quantile_graph_aggregated[10],V(agg_graph)$id,NA)
+
+plot(agg_graph, edge.arrow.size=0.35,edge.arrow.mode = "-", vertex.label = V(agg_graph)$label, vertex.label.cex = 0.5, vertex.label.font = 2, main = "HSCODE 304620 - Eigenvector centrality graph" ) 
+
+```
+
+Below are the nodes that are the top 10% nodes in terms of eigenvector centrality score:
+
+```{r}
+(V(agg_graph)$label[!is.na(V(agg_graph)$label)])
+```
+
+### 2030
+
+```{r}
+set.seed (1234)
+
+top10_graph <- quantile(eigen_centrality(MC2_graph_2030_1)$vector,probs = seq(0, 1, 1/10))
+         
+V(MC2_graph_2030_1)$size = eigen_centrality(MC2_graph_2030_1)$vector
+
+agg_graph <- delete_vertices(MC2_graph_2030_1, V(MC2_graph_2030_1)[size < top10_graph[10]])
+
+layout1 <- layout_with_fr(agg_graph)
+
+quantile_graph_aggregated <- quantile(V(agg_graph)$size, probs = seq(0, 1, 1/10))
+
+# To identify the high centrality nodes 
+V(agg_graph)$color <- ifelse (V(agg_graph)$size > quantile_graph_aggregated[10], "orangered", "skyblue")
+E(agg_graph)$color <- "grey"
+V(agg_graph)$size <- V(agg_graph)$size/0.05 
+V(agg_graph)$label <- ifelse (V(agg_graph)$size*0.05 > quantile_graph_aggregated[10],V(agg_graph)$id,NA)
+
+plot(agg_graph, edge.arrow.size=0.35,edge.arrow.mode = "-", vertex.label = V(agg_graph)$label, vertex.label.cex = 0.5, vertex.label.font = 2, main = "HSCODE 304620 - Eigenvector centrality graph" ) 
+
+```
+
+Below are the nodes that are the top 10% nodes in terms of eigenvector centrality score:
+
+```{r}
+(V(agg_graph)$label[!is.na(V(agg_graph)$label)])
+```
+
+### 2031
+
+```{r}
+set.seed (1234)
+
+top10_graph <- quantile(eigen_centrality(MC2_graph_2031_1)$vector,probs = seq(0, 1, 1/10))
+         
+V(MC2_graph_2031_1)$size = eigen_centrality(MC2_graph_2031_1)$vector
+
+agg_graph <- delete_vertices(MC2_graph_2031_1, V(MC2_graph_2031_1)[size < top10_graph[10]])
+
+layout1 <- layout_with_fr(agg_graph)
+
+quantile_graph_aggregated <- quantile(V(agg_graph)$size, probs = seq(0, 1, 1/10))
+
+# To identify the high centrality nodes 
+V(agg_graph)$color <- ifelse (V(agg_graph)$size > quantile_graph_aggregated[10], "orangered", "skyblue")
+E(agg_graph)$color <- "grey"
+V(agg_graph)$size <- V(agg_graph)$size/0.05 
+V(agg_graph)$label <- ifelse (V(agg_graph)$size*0.05 > quantile_graph_aggregated[10],V(agg_graph)$id,NA)
+
+plot(agg_graph, edge.arrow.size=0.35,edge.arrow.mode = "-", vertex.label = V(agg_graph)$label, vertex.label.cex = 0.5, vertex.label.font = 2, main = "HSCODE 304620 - Eigenvector centrality graph" ) 
+
+```
+
+Below are the nodes that are the top 10% nodes in terms of eigenvector centrality score:
+
+```{r}
+(V(agg_graph)$label[!is.na(V(agg_graph)$label)])
+```
+
+### 2032
+
+```{r}
+set.seed (1234)
+
+top10_graph <- quantile(eigen_centrality(MC2_graph_2032_1)$vector,probs = seq(0, 1, 1/10))
+         
+V(MC2_graph_2032_1)$size = eigen_centrality(MC2_graph_2032_1)$vector
+
+agg_graph <- delete_vertices(MC2_graph_2032_1, V(MC2_graph_2032_1)[size < top10_graph[10]])
+
+layout1 <- layout_with_fr(agg_graph)
+
+quantile_graph_aggregated <- quantile(V(agg_graph)$size, probs = seq(0, 1, 1/10))
+
+# To identify the high centrality nodes 
+V(agg_graph)$color <- ifelse (V(agg_graph)$size > quantile_graph_aggregated[10], "orangered", "skyblue")
+E(agg_graph)$color <- "grey"
+V(agg_graph)$size <- V(agg_graph)$size/0.05 
+V(agg_graph)$label <- ifelse (V(agg_graph)$size*0.05 > quantile_graph_aggregated[10],V(agg_graph)$id,NA)
+
+plot(agg_graph, edge.arrow.size=0.35,edge.arrow.mode = "-", vertex.label = V(agg_graph)$label, vertex.label.cex = 0.5, vertex.label.font = 2, main = "HSCODE 304620 - Eigenvector centrality graph" ) 
+
+```
+
+Below are the nodes that are the top 10% nodes in terms of eigenvector centrality score:
+
+```{r}
+(V(agg_graph)$label[!is.na(V(agg_graph)$label)])
+```
+
+### 2033
+
+```{r}
+set.seed (1234)
+
+top10_graph <- quantile(eigen_centrality(MC2_graph_2033_1)$vector,probs = seq(0, 1, 1/10))
+         
+V(MC2_graph_2033_1)$size = eigen_centrality(MC2_graph_2033_1)$vector
+
+agg_graph <- delete_vertices(MC2_graph_2033_1, V(MC2_graph_2033_1)[size < top10_graph[10]])
+
+layout1 <- layout_with_fr(agg_graph)
+
+quantile_graph_aggregated <- quantile(V(agg_graph)$size, probs = seq(0, 1, 1/10))
+
+# To identify the high centrality nodes 
+V(agg_graph)$color <- ifelse (V(agg_graph)$size > quantile_graph_aggregated[10], "orangered", "skyblue")
+E(agg_graph)$color <- "grey"
+V(agg_graph)$size <- V(agg_graph)$size/0.05 
+V(agg_graph)$label <- ifelse (V(agg_graph)$size*0.05 > quantile_graph_aggregated[10],V(agg_graph)$id,NA)
+
+plot(agg_graph, edge.arrow.size=0.35,edge.arrow.mode = "-", vertex.label = V(agg_graph)$label, vertex.label.cex = 0.5, vertex.label.font = 2, main = "HSCODE 304620 - Eigenvector centrality graph" ) 
+
+```
+
+Below are the nodes that are the top 10% nodes in terms of eigenvector centrality score:
+
+```{r}
+(V(agg_graph)$label[!is.na(V(agg_graph)$label)])
+```
+
+### 2034
+
+```{r}
+set.seed (1234)
+
+top10_graph <- quantile(eigen_centrality(MC2_graph_2034_1)$vector,probs = seq(0, 1, 1/10))
+         
+V(MC2_graph_2034_1)$size = eigen_centrality(MC2_graph_2034_1)$vector
+
+agg_graph <- delete_vertices(MC2_graph_2034_1, V(MC2_graph_2034_1)[size < top10_graph[10]])
+
+layout1 <- layout_with_fr(agg_graph)
+
+quantile_graph_aggregated <- quantile(V(agg_graph)$size, probs = seq(0, 1, 1/10))
+
+# To identify the high centrality nodes 
+V(agg_graph)$color <- ifelse (V(agg_graph)$size > quantile_graph_aggregated[10], "orangered", "skyblue")
+E(agg_graph)$color <- "grey"
+V(agg_graph)$size <- V(agg_graph)$size/0.05 
+V(agg_graph)$label <- ifelse (V(agg_graph)$size*0.05 > quantile_graph_aggregated[10],V(agg_graph)$id,NA)
+
+plot(agg_graph, edge.arrow.size=0.35,edge.arrow.mode = "-", vertex.label = V(agg_graph)$label, vertex.label.cex = 0.5, vertex.label.font = 2, main = "HSCODE 304620 - Eigenvector centrality graph" ) 
+
+```
+
+Below are the nodes that are the top 10% nodes in terms of eigenvector centrality score:
+
+```{r}
+(V(agg_graph)$label[!is.na(V(agg_graph)$label)])
+```
+
+### All combined
+
+```{r}
+set.seed (1234)
+
+top10_graph <- quantile(eigen_centrality(MC2_graph_combined_1)$vector,probs = seq(0, 1, 1/10))
+         
+V(MC2_graph_combined_1)$size = eigen_centrality(MC2_graph_combined_1)$vector
+
+agg_graph <- delete_vertices(MC2_graph_combined_1, V(MC2_graph_combined_1)[size < top10_graph[10]])
+
+layout1 <- layout_with_fr(agg_graph)
+
+quantile_graph_aggregated <- quantile(V(agg_graph)$size, probs = seq(0, 1, 1/10))
+
+# To identify the high centrality nodes 
+V(agg_graph)$color <- ifelse (V(agg_graph)$size > quantile_graph_aggregated[10], "orangered", "skyblue")
+E(agg_graph)$color <- "grey"
+V(agg_graph)$size <- V(agg_graph)$size/0.05 
+V(agg_graph)$label <- ifelse (V(agg_graph)$size*0.05 > quantile_graph_aggregated[10],V(agg_graph)$id,NA)
+
+plot(agg_graph, edge.arrow.size=0.35,edge.arrow.mode = "-", vertex.label = V(agg_graph)$label, vertex.label.cex = 0.5, vertex.label.font = 2, main = "HSCODE 304620 - Eigenvector centrality graph" ) 
+
+```
+
+Below are the nodes that are the top 10% nodes in terms of eigenvector centrality score:
+
+```{r}
+(V(agg_graph)$label[!is.na(V(agg_graph)$label)])
+```
+:::
+
+## hscode: 630900
+
+::: panel-tabset
+### 2028
+
+```{r}
+set.seed (1234)
+
+top10_graph <- quantile(eigen_centrality(MC2_graph_2028_2)$vector,probs = seq(0, 1, 1/10))
+         
+V(MC2_graph_2028_2)$size = eigen_centrality(MC2_graph_2028_2)$vector
+
+agg_graph <- delete_vertices(MC2_graph_2028_2, V(MC2_graph_2028_2)[size < top10_graph[10]])
+
+layout1 <- layout_with_fr(agg_graph)
+
+quantile_graph_aggregated <- quantile(V(agg_graph)$size,probs = seq(0, 1, 1/10))
+
+# To identify the high centrality nodes 
+V(agg_graph)$color <- ifelse (V(agg_graph)$size > quantile_graph_aggregated[10], "orangered", "skyblue")
+E(agg_graph)$color <- "grey"
+V(agg_graph)$size <- V(agg_graph)$size/0.05 
+V(agg_graph)$label <- ifelse (V(agg_graph)$size*0.05 > quantile_graph_aggregated[10],V(agg_graph)$id,NA)
+
+plot(agg_graph, edge.arrow.size=0.35,edge.arrow.mode = "-", vertex.label = V(agg_graph)$label, vertex.label.cex = 0.5, vertex.label.font = 2, main = "HSCODE 630900 - Eigenvector centrality graph" )  
+
+```
+
+Below are the nodes that are the top 10% nodes in terms of eigenvector centrality score:
+
+```{r}
+(V(agg_graph)$label[!is.na(V(agg_graph)$label)])
+```
+
+### 2029
+
+```{r}
+set.seed (1234)
+
+top10_graph <- quantile(eigen_centrality(MC2_graph_2029_2)$vector,probs = seq(0, 1, 1/10))
+         
+V(MC2_graph_2029_2)$size = eigen_centrality(MC2_graph_2029_2)$vector
+
+agg_graph <- delete_vertices(MC2_graph_2029_2, V(MC2_graph_2029_2)[size < top10_graph[10]])
+
+layout1 <- layout_with_fr(agg_graph)
+
+quantile_graph_aggregated <- quantile(V(agg_graph)$size, probs = seq(0, 1, 1/10))
+
+# To identify the high centrality nodes 
+V(agg_graph)$color <- ifelse (V(agg_graph)$size > quantile_graph_aggregated[10], "orangered", "skyblue")
+E(agg_graph)$color <- "grey"
+V(agg_graph)$size <- V(agg_graph)$size/0.05 
+V(agg_graph)$label <- ifelse (V(agg_graph)$size*0.05 > quantile_graph_aggregated[10],V(agg_graph)$id,NA)
+
+plot(agg_graph, edge.arrow.size=0.35,edge.arrow.mode = "-", vertex.label = V(agg_graph)$label, vertex.label.cex = 0.5, vertex.label.font = 2, main = "HSCODE 304620 - Eigenvector centrality graph" ) 
+
+```
+
+Below are the nodes that are the top 10% nodes in terms of eigenvector centrality score:
+
+```{r}
+(V(agg_graph)$label[!is.na(V(agg_graph)$label)])
+```
+
+### 2030
+
+```{r}
+set.seed (1234)
+
+top10_graph <- quantile(eigen_centrality(MC2_graph_2030_2)$vector,probs = seq(0, 1, 1/10))
+         
+V(MC2_graph_2030_2)$size = eigen_centrality(MC2_graph_2030_2)$vector
+
+agg_graph <- delete_vertices(MC2_graph_2030_2, V(MC2_graph_2030_2)[size < top10_graph[10]])
+
+layout1 <- layout_with_fr(agg_graph)
+
+quantile_graph_aggregated <- quantile(V(agg_graph)$size, probs = seq(0, 1, 1/10))
+
+# To identify the high centrality nodes 
+V(agg_graph)$color <- ifelse (V(agg_graph)$size > quantile_graph_aggregated[10], "orangered", "skyblue")
+E(agg_graph)$color <- "grey"
+V(agg_graph)$size <- V(agg_graph)$size/0.05 
+V(agg_graph)$label <- ifelse (V(agg_graph)$size*0.05 > quantile_graph_aggregated[10],V(agg_graph)$id,NA)
+
+plot(agg_graph, edge.arrow.size=0.35,edge.arrow.mode = "-", vertex.label = V(agg_graph)$label, vertex.label.cex = 0.5, vertex.label.font = 2, main = "HSCODE 304620 - Eigenvector centrality graph" ) 
+
+```
+
+Below are the nodes that are the top 10% nodes in terms of eigenvector centrality score:
+
+```{r}
+(V(agg_graph)$label[!is.na(V(agg_graph)$label)])
+```
+
+### 2031
+
+```{r}
+set.seed (1234)
+
+top10_graph <- quantile(eigen_centrality(MC2_graph_2031_2)$vector,probs = seq(0, 1, 1/10))
+         
+V(MC2_graph_2031_2)$size = eigen_centrality(MC2_graph_2031_2)$vector
+
+agg_graph <- delete_vertices(MC2_graph_2031_2, V(MC2_graph_2031_2)[size < top10_graph[10]])
+
+layout1 <- layout_with_fr(agg_graph)
+
+quantile_graph_aggregated <- quantile(V(agg_graph)$size, probs = seq(0, 1, 1/10))
+
+# To identify the high centrality nodes 
+V(agg_graph)$color <- ifelse (V(agg_graph)$size > quantile_graph_aggregated[10], "orangered", "skyblue")
+E(agg_graph)$color <- "grey"
+V(agg_graph)$size <- V(agg_graph)$size/0.05 
+V(agg_graph)$label <- ifelse (V(agg_graph)$size*0.05 > quantile_graph_aggregated[10],V(agg_graph)$id,NA)
+
+plot(agg_graph, edge.arrow.size=0.35,edge.arrow.mode = "-", vertex.label = V(agg_graph)$label, vertex.label.cex = 0.5, vertex.label.font = 2, main = "HSCODE 304620 - Eigenvector centrality graph" ) 
+
+```
+
+Below are the nodes that are the top 10% nodes in terms of eigenvector centrality score:
+
+```{r}
+(V(agg_graph)$label[!is.na(V(agg_graph)$label)])
+```
+
+### 2032
+
+```{r}
+set.seed (1234)
+
+top10_graph <- quantile(eigen_centrality(MC2_graph_2032_2)$vector,probs = seq(0, 1, 1/10))
+         
+V(MC2_graph_2032_2)$size = eigen_centrality(MC2_graph_2032_2)$vector
+
+agg_graph <- delete_vertices(MC2_graph_2032_2, V(MC2_graph_2032_2)[size < top10_graph[10]])
+
+layout1 <- layout_with_fr(agg_graph)
+
+quantile_graph_aggregated <- quantile(V(agg_graph)$size, probs = seq(0, 1, 1/10))
+
+# To identify the high centrality nodes 
+V(agg_graph)$color <- ifelse (V(agg_graph)$size > quantile_graph_aggregated[10], "orangered", "skyblue")
+E(agg_graph)$color <- "grey"
+V(agg_graph)$size <- V(agg_graph)$size/0.05 
+V(agg_graph)$label <- ifelse (V(agg_graph)$size*0.05 > quantile_graph_aggregated[10],V(agg_graph)$id,NA)
+
+plot(agg_graph, edge.arrow.size=0.35,edge.arrow.mode = "-", vertex.label = V(agg_graph)$label, vertex.label.cex = 0.5, vertex.label.font = 2, main = "HSCODE 304620 - Eigenvector centrality graph" ) 
+
+```
+
+Below are the nodes that are the top 10% nodes in terms of eigenvector centrality score:
+
+```{r}
+(V(agg_graph)$label[!is.na(V(agg_graph)$label)])
+```
+
+### 2033
+
+```{r}
+set.seed (1234)
+
+top10_graph <- quantile(eigen_centrality(MC2_graph_2033_2)$vector,probs = seq(0, 1, 1/10))
+         
+V(MC2_graph_2033_2)$size = eigen_centrality(MC2_graph_2033_2)$vector
+
+agg_graph <- delete_vertices(MC2_graph_2033_2, V(MC2_graph_2033_2)[size < top10_graph[10]])
+
+layout1 <- layout_with_fr(agg_graph)
+
+quantile_graph_aggregated <- quantile(V(agg_graph)$size, probs = seq(0, 1, 1/10))
+
+# To identify the high centrality nodes 
+V(agg_graph)$color <- ifelse (V(agg_graph)$size > quantile_graph_aggregated[10], "orangered", "skyblue")
+E(agg_graph)$color <- "grey"
+V(agg_graph)$size <- V(agg_graph)$size/0.05 
+V(agg_graph)$label <- ifelse (V(agg_graph)$size*0.05 > quantile_graph_aggregated[10],V(agg_graph)$id,NA)
+
+plot(agg_graph, edge.arrow.size=0.35,edge.arrow.mode = "-", vertex.label = V(agg_graph)$label, vertex.label.cex = 0.5, vertex.label.font = 2, main = "HSCODE 304620 - Eigenvector centrality graph" ) 
+
+```
+
+Below are the nodes that are the top 10% nodes in terms of eigenvector centrality score:
+
+```{r}
+(V(agg_graph)$label[!is.na(V(agg_graph)$label)])
+```
+
+### 2034
+
+```{r}
+set.seed (1234)
+
+top10_graph <- quantile(eigen_centrality(MC2_graph_2034_2)$vector,probs = seq(0, 1, 1/10))
+         
+V(MC2_graph_2034_2)$size = eigen_centrality(MC2_graph_2034_2)$vector
+
+agg_graph <- delete_vertices(MC2_graph_2034_2, V(MC2_graph_2034_2)[size < top10_graph[10]])
+
+layout1 <- layout_with_fr(agg_graph)
+
+quantile_graph_aggregated <- quantile(V(agg_graph)$size, probs = seq(0, 1, 1/10))
+
+# To identify the high centrality nodes 
+V(agg_graph)$color <- ifelse (V(agg_graph)$size > quantile_graph_aggregated[10], "orangered", "skyblue")
+E(agg_graph)$color <- "grey"
+V(agg_graph)$size <- V(agg_graph)$size/0.05 
+V(agg_graph)$label <- ifelse (V(agg_graph)$size*0.05 > quantile_graph_aggregated[10],V(agg_graph)$id,NA)
+
+plot(agg_graph, edge.arrow.size=0.35,edge.arrow.mode = "-", vertex.label = V(agg_graph)$label, vertex.label.cex = 0.5, vertex.label.font = 2, main = "HSCODE 304620 - Eigenvector centrality graph" ) 
+
+```
+
+Below are the nodes that are the top 10% nodes in terms of eigenvector centrality score:
+
+```{r}
+(V(agg_graph)$label[!is.na(V(agg_graph)$label)])
+```
+
+### All combined
+
+```{r}
+set.seed (1234)
+
+top10_graph <- quantile(eigen_centrality(MC2_graph_combined_2)$vector,probs = seq(0, 1, 1/10))
+         
+V(MC2_graph_combined_2)$size = eigen_centrality(MC2_graph_combined_2)$vector
+
+agg_graph <- delete_vertices(MC2_graph_combined_2, V(MC2_graph_combined_2)[size < top10_graph[10]])
+
+layout1 <- layout_with_fr(agg_graph)
+
+quantile_graph_aggregated <- quantile(V(agg_graph)$size, probs = seq(0, 1, 1/10))
+
+# To identify the high centrality nodes 
+V(agg_graph)$color <- ifelse (V(agg_graph)$size > quantile_graph_aggregated[10], "orangered", "skyblue")
+E(agg_graph)$color <- "grey"
+V(agg_graph)$size <- V(agg_graph)$size/0.05 
+V(agg_graph)$label <- ifelse (V(agg_graph)$size*0.05 > quantile_graph_aggregated[10],V(agg_graph)$id,NA)
+
+plot(agg_graph, edge.arrow.size=0.35,edge.arrow.mode = "-", vertex.label = V(agg_graph)$label, vertex.label.cex = 0.5, vertex.label.font = 2, main = "HSCODE 304620 - Eigenvector centrality graph" ) 
+
+```
+
+Below are the nodes that are the top 10% nodes in terms of eigenvector centrality score:
+
+```{r}
+(V(agg_graph)$label[!is.na(V(agg_graph)$label)])
+```
+:::
+:::
+
+## 4.3 Plot Analysis
+
+Based on the plot above, it is observed the number of nodes that have high eigenvector centrality scores are higher in hscode 304620 as compared to 630900.
+
+### 4.3.1 HSCode 304620
+
+In hscode 304620, node **Mar del Este CJSC** remained to the top 10% that consist of high eigenvector centrality score from 2028 till 2034. However the score is not consistent as we can see based on the size of the node from the plot, **Mar del Este CJSC** score was low in 2031 and increase again in 2034. This can be inferred that **Mar del Este CJSC** might have the habit of changing trading partner across the years.
+
+Below codes are used to check the change in distinct trading partner across the years for **Mar del Este CJSC** as a **target** and **source** respectivly.
+
+::: panel-tabset
+
+## Target
+```{r}
+edge_try <- MC2_edges %>%
+    filter(Year == "2028", source!=target, target == "Mar del Este CJSC" , hscode == 304620) %>%
+    group_by(target, hscode, Year) %>%
+    summarise(weights = n(), sumgoods = sum(valueofgoodsusd), tradingpartner = n_distinct(source)) %>%
+    arrange(desc(tradingpartner)) %>%
+    filter(!is.na(sumgoods)) %>%
+    ungroup()
+
+edge_try2 <- MC2_edges %>%
+    filter(Year == "2029", source!=target, target == "Mar del Este CJSC", hscode == 304620) %>%
+    group_by(target, hscode, Year) %>%
+    summarise(weights = n(), sumgoods = sum(valueofgoodsusd), tradingpartner = n_distinct(source)) %>%
+    arrange(desc(tradingpartner)) %>%
+    filter(!is.na(sumgoods)) %>%
+    ungroup()
+
+edge_try3 <- MC2_edges %>%
+    filter(Year == "2030", source!=target, target == "Mar del Este CJSC", hscode == 304620) %>%
+    group_by(target, hscode, Year) %>%
+    summarise(weights = n(), sumgoods = sum(valueofgoodsusd), tradingpartner = n_distinct(source)) %>%
+    arrange(desc(tradingpartner)) %>%
+    filter(!is.na(sumgoods)) %>%
+    ungroup()
+
+edge_try4 <- MC2_edges %>%
+    filter(Year == "2031", source!=target, target == "Mar del Este CJSC", hscode == 304620) %>%
+    group_by(target, hscode, Year) %>%
+    summarise(weights = n(), sumgoods = sum(valueofgoodsusd), tradingpartner = n_distinct(source)) %>%
+    arrange(desc(tradingpartner)) %>%
+    filter(!is.na(sumgoods)) %>%
+    ungroup()
+
+edge_try5 <- MC2_edges %>%
+    filter(Year == "2032", source!=target, target == "Mar del Este CJSC", hscode == 304620) %>%
+    group_by(target, hscode, Year) %>%
+    summarise(weights = n(), sumgoods = sum(valueofgoodsusd), tradingpartner = n_distinct(source)) %>%
+    arrange(desc(tradingpartner)) %>%
+    filter(!is.na(sumgoods)) %>%
+    ungroup()
+
+edge_try6 <- MC2_edges %>%
+    filter(Year == "2033", source!=target, target == "Mar del Este CJSC", hscode == 304620) %>%
+    group_by(target, hscode, Year) %>%
+    summarise(weights = n(), sumgoods = sum(valueofgoodsusd), tradingpartner = n_distinct(source)) %>%
+    arrange(desc(tradingpartner)) %>%
+    filter(!is.na(sumgoods)) %>%
+    ungroup()
+
+edge_try7 <- MC2_edges %>%
+    filter(Year == "2034", source!=target, target == "Mar del Este CJSC", hscode == 304620) %>%
+    group_by(target, hscode, Year) %>%
+    summarise(weights = n(), sumgoods = sum(valueofgoodsusd), tradingpartner = n_distinct(source)) %>%
+    arrange(desc(tradingpartner)) %>%
+    filter(!is.na(sumgoods)) %>%
+    ungroup()
+
+edges_all <- rbind(edge_try
+                                   , edge_try2
+                                   , edge_try3
+                                   , edge_try4
+                                   , edge_try5
+                                   , edge_try6
+                                   , edge_try7) 
+edges_all
+
+```
+
+## Source
+```{r}
+edge_try <- MC2_edges %>%
+    filter(Year == "2028", source!=target, source == "Mar del Este CJSC" , hscode == 304620) %>%
+    group_by(source, hscode, Year) %>%
+    summarise(weights = n(), sumgoods = sum(valueofgoodsusd), tradingpartner = n_distinct(target)) %>%
+    arrange(desc(tradingpartner)) %>%
+    filter(!is.na(sumgoods)) %>%
+    ungroup()
+
+edge_try2 <- MC2_edges %>%
+    filter(Year == "2029", source!=target, source == "Mar del Este CJSC", hscode == 304620) %>%
+    group_by(source, hscode, Year) %>%
+    summarise(weights = n(), sumgoods = sum(valueofgoodsusd), tradingpartner = n_distinct(target)) %>%
+    arrange(desc(tradingpartner)) %>%
+    filter(!is.na(sumgoods)) %>%
+    ungroup()
+
+edge_try3 <- MC2_edges %>%
+    filter(Year == "2030", source!=target, source == "Mar del Este CJSC", hscode == 304620) %>%
+    group_by(source, hscode, Year) %>%
+    summarise(weights = n(), sumgoods = sum(valueofgoodsusd), tradingpartner = n_distinct(target)) %>%
+    arrange(desc(tradingpartner)) %>%
+    filter(!is.na(sumgoods)) %>%
+    ungroup()
+
+edge_try4 <- MC2_edges %>%
+    filter(Year == "2031", source!=target, source == "Mar del Este CJSC", hscode == 304620) %>%
+    group_by(source, hscode, Year) %>%
+    summarise(weights = n(), sumgoods = sum(valueofgoodsusd), tradingpartner = n_distinct(target)) %>%
+    arrange(desc(tradingpartner)) %>%
+    filter(!is.na(sumgoods)) %>%
+    ungroup()
+
+edge_try5 <- MC2_edges %>%
+    filter(Year == "2032", source!=target, source == "Mar del Este CJSC", hscode == 304620) %>%
+    group_by(source, hscode, Year) %>%
+    summarise(weights = n(), sumgoods = sum(valueofgoodsusd), tradingpartner = n_distinct(target)) %>%
+    arrange(desc(tradingpartner)) %>%
+    filter(!is.na(sumgoods)) %>%
+    ungroup()
+
+edge_try6 <- MC2_edges %>%
+    filter(Year == "2033", source!=target, source == "Mar del Este CJSC", hscode == 304620) %>%
+    group_by(source, hscode, Year) %>%
+    summarise(weights = n(), sumgoods = sum(valueofgoodsusd), tradingpartner = n_distinct(target)) %>%
+    arrange(desc(tradingpartner)) %>%
+    filter(!is.na(sumgoods)) %>%
+    ungroup()
+
+edge_try7 <- MC2_edges %>%
+    filter(Year == "2034", source!=target, source == "Mar del Este CJSC", hscode == 304620) %>%
+    group_by(source, hscode, Year) %>%
+    summarise(weights = n(), sumgoods = sum(valueofgoodsusd), tradingpartner = n_distinct(target)) %>%
+    arrange(desc(tradingpartner)) %>%
+    filter(!is.na(sumgoods)) %>%
+    ungroup()
+
+edges_all <- rbind(edge_try
+                                   , edge_try2
+                                   , edge_try3
+                                   , edge_try4
+                                   , edge_try5
+                                   , edge_try6
+                                   , edge_try7) 
+edges_all
+```
+:::
+
+From the result above, it is observed that **Mar del Este CJSC** is not a **source** for hscode 304620.
+While being a **target**, it is observed the number of distinct trading partners was dropped to 31 in 2031 as compared to a high of 39 trading partners in 2028. Based on the earlier network graph plot, it is also observed that the number of nodes that are the top 10% are also decreasing in count as the graph plotted are simplified over the years. This might be due to the increase in restrictions & capturing of illegal activities happened for hscode 304620 trading activities, leading to the decrease in trading partners overall.
+
+### 4.3.1 HSCode 630900
+
+While for 630900, compared to 304620, the nodes that are involved and highlighted to be the top 10% of eigenvector centrality score appeared to be lesser. From the above network graph plots, it is observed that the trading partners of those highlighted nodes started from having interaction with one another. Nearing to the latest trend in 2034, it is observed that each highlighted nodes with high eigenvector centrality score have their own distinct trading partners that do not have interaction with one another. This might be due to the selective or pre-agreed contract that limits the organizations trading partners in the same hscode in order to remain consistent and vigilant.
+
+## 5. Insights and Learning points
+
+Throughout this exercise, the ability to use network graph allow the users to have a visualization on the connection between the different organizations. Patterns observed above can be highlighted to see if similar patterns such as reducing in trading partners or isolating trading partners are signs of potential illegal activities involvement.
+
+To further improve the analysis, known illegal organizations are suggested to be identified first in order to allow the analyst to study the patterns and behavior of such organizations. With this information, other analysis such as correlation between value goods traded and potential illegal organizations can be carried out. The patterns observed would allow analysts to identify potential illegal organizations more accurately.  
 

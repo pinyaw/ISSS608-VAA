@@ -40357,7 +40357,24 @@ $links
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>MC1_edges <span class="ot">&lt;-</span> <span class="fu">as_tibble</span>(MC1<span class="sc">$</span>links) <span class="sc">%&gt;%</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span> (source, target, type, weight, key)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span> (source, target, type, weight, key)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>MC1_edges</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 11,069 × 5
+   source                   target                       type       weight   key
+   &lt;chr&gt;                    &lt;chr&gt;                        &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;
+ 1 Spanish Shrimp  Carriers 12744                        ownership   0.900     0
+ 2 Spanish Shrimp  Carriers 21323516                     partnersh…  0.846     0
+ 3 Spanish Shrimp  Carriers 290834957                    partnersh…  0.965     0
+ 4 Spanish Shrimp  Carriers 3506021                      ownership   0.964     0
+ 5 Spanish Shrimp  Carriers Conventionâ                  family_re…  0.823     0
+ 6 Spanish Shrimp  Carriers 2262                         family_re…  0.893     0
+ 7 Spanish Shrimp  Carriers Ashley Davis                 family_re…  0.839     0
+ 8 Spanish Shrimp  Carriers 924                          family_re…  0.885     0
+ 9 Spanish Shrimp  Carriers 95                           family_re…  0.887     0
+10 Spanish Shrimp  Carriers Ancla Azul Company Solutions membership  0.899     0
+# ℹ 11,059 more rows</code></pre>
+</div>
 </div>
 
 
