@@ -1,0 +1,19 @@
+---
+title: "In-class_Ex07"
+author: "Yap Pin Yaw"
+---
+
+# Tableau 
+
+## Time-Series Graph:
+
+<https://public.tableau.com/app/profile/pin6699/viz/time-seriesgraphs/Dashboard1?publish=yes>
+
+## Slope-graph: 
+
+<https://public.tableau.com/app/profile/pin6699/viz/slope-graph/Slope-graph?publish=yes>
+
+## Calendar Heatmap:
+
+<https://public.tableau.com/app/profile/pin6699/viz/calanderheatmap/Sheet1?publish=yes>
+

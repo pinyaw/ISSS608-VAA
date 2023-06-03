@@ -13,6 +13,9 @@ website:
             href: "Hands_on_Ex/Hands-on_Ex03/Hands-on_Ex03.qmd"
           - text: "Hands-on Exercise 5"
             href: "Hands_on_Ex/Hands-on_Ex05/Hands-on_Ex05.qmd"
+          - text: "Hands-on Exercise 7"
+            href: "Hands_on_Ex/Hands-on_Ex07/Hands-on_Ex07.qmd"
+          
       - text: "In-class Exercise"
         menu:
           - text: "In-class Exercise 1"
@@ -25,12 +28,16 @@ website:
             href: "In_class_Ex/In-class_Ex05/In-class_Ex05.qmd"
           - text: "In-class Exercise 6"
             href: "In_class_Ex/In-class_Ex06/In-class_Ex06.qmd"
+          - text: "In-class Exercise 7"
+            href: "In_class_Ex/In-class_Ex07/In-class_Ex07.qmd"
       - text: "Take Home Exercise"
         menu:
           - text: "Take Home Exercise 1"
             href: "Take_Home_Ex/Take-home_Ex01/Take-home_Ex01.qmd"
           - text: "Take Home Exercise 2"
             href: "Take_Home_Ex/Take-home_Ex02/Take-home_Ex02.qmd"
+          - text: "Take Home Exercise 3"
+            href: "Take_Home_Ex/Take-home_Ex03/Take-home_Ex03.qmd"
             
     right: 
       - href: index.qmd

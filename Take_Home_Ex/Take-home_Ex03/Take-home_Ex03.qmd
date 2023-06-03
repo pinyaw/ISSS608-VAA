@@ -1,0 +1,11 @@
+---
+title: "Take Home Exercise 3"
+author: "Yap Pin Yaw"
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+execute: 
+  warning: false
+editor: visual
+---

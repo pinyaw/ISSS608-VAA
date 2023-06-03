@@ -105,6 +105,20 @@
     "text": "Changing colour of graph\n\n\nShow the code\ng &lt;- ggraph(GAStech_graph) + \n  geom_edge_link(aes(colour = 'grey50')) +\n  geom_node_point(aes(colour = 'grey40'))\n\ng + theme_graph(background = 'grey10',\n                text_colour = 'white')"
   },
   {
+    "objectID": "Hands_on_Ex/Hands-on_Ex07/Hands-on_Ex07.html",
+    "href": "Hands_on_Ex/Hands-on_Ex07/Hands-on_Ex07.html",
+    "title": "Hands On Exercise 7",
+    "section": "",
+    "text": "pacman::p_load(ggHoriPlot, ggthemes, tidyverse)\n\n\n\n\n\naverp &lt;- read_csv(\"data/AVERP.csv\") %&gt;%\n  mutate(`Date` = dmy(`Date`))\n\nRows: 7452 Columns: 3\n── Column specification ────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr (2): Date, Consumer Items\ndbl (1): Values\n\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.\n\n\n\n\n\n\naverp %&gt;% \n  filter(Date &gt;= \"2018-01-01\") %&gt;%\n  ggplot() +\n  geom_horizon(aes(x = Date, y=Values), \n               origin = \"midpoint\", \n               horizonscale = 6)+\n  facet_grid(`Consumer Items`~.) +\n    theme_few() +\n  scale_fill_hcl(palette = 'RdBu') +\n  theme(panel.spacing.y=unit(0, \"lines\"), strip.text.y = element_text(\n    size = 5, angle = 0, hjust = 0),\n    legend.position = 'none',\n    axis.text.y = element_blank(),\n    axis.text.x = element_text(size=7),\n    axis.title.y = element_blank(),\n    axis.title.x = element_blank(),\n    axis.ticks.y = element_blank(),\n    panel.border = element_blank()\n    ) +\n    scale_x_date(expand=c(0,0), date_breaks = \"3 month\", date_labels = \"%b%y\") +\n  ggtitle('Average Retail Prices of Selected Consumer Items (Jan 2018 to Dec 2022)')\n\nWarning: Using the `size` aesthetic in this geom was deprecated in ggplot2 3.4.0.\nℹ Please use `linewidth` in the `default_aes` field and elsewhere instead."
+  },
+  {
+    "objectID": "Hands_on_Ex/Hands-on_Ex07/Hands-on_Ex07.html#plotting-horizon-graph",
+    "href": "Hands_on_Ex/Hands-on_Ex07/Hands-on_Ex07.html#plotting-horizon-graph",
+    "title": "Hands On Exercise 7",
+    "section": "",
+    "text": "averp %&gt;% \n  filter(Date &gt;= \"2018-01-01\") %&gt;%\n  ggplot() +\n  geom_horizon(aes(x = Date, y=Values), \n               origin = \"midpoint\", \n               horizonscale = 6)+\n  facet_grid(`Consumer Items`~.) +\n    theme_few() +\n  scale_fill_hcl(palette = 'RdBu') +\n  theme(panel.spacing.y=unit(0, \"lines\"), strip.text.y = element_text(\n    size = 5, angle = 0, hjust = 0),\n    legend.position = 'none',\n    axis.text.y = element_blank(),\n    axis.text.x = element_text(size=7),\n    axis.title.y = element_blank(),\n    axis.title.x = element_blank(),\n    axis.ticks.y = element_blank(),\n    panel.border = element_blank()\n    ) +\n    scale_x_date(expand=c(0,0), date_breaks = \"3 month\", date_labels = \"%b%y\") +\n  ggtitle('Average Retail Prices of Selected Consumer Items (Jan 2018 to Dec 2022)')\n\nWarning: Using the `size` aesthetic in this geom was deprecated in ggplot2 3.4.0.\nℹ Please use `linewidth` in the `default_aes` field and elsewhere instead."
+  },
+  {
     "objectID": "index.html",
     "href": "index.html",
     "title": "ISSS608-VAA",
@@ -180,6 +194,34 @@
     "title": "In-class_Ex06",
     "section": "",
     "text": "Basic PCP:\nhttps://public.tableau.com/app/profile/pin6699/viz/In-class_Ex06_16845693830970/BasicPCP?publish=yes\n\nStandardised Line Graph:\nhttps://public.tableau.com/app/profile/pin6699/viz/In-class_Ex06_16845693830970/PCPforWorldHappinessScore?publish=yes\n\nHeatMap:\nhttps://public.tableau.com/app/profile/pin6699/viz/In-class_Ex06_HeatMap/Sheet3?publish=yes\n\nTreeMap:\nhttps://public.tableau.com/app/profile/pin6699/viz/TreeMap_16845691344750/TreeMapofNo_ofUnitsbyAreaRegion?publish=yes"
+  },
+  {
+    "objectID": "In_class_Ex/In-class_Ex07/In-class_Ex07.html",
+    "href": "In_class_Ex/In-class_Ex07/In-class_Ex07.html",
+    "title": "In-class_Ex07",
+    "section": "",
+    "text": "https://public.tableau.com/app/profile/pin6699/viz/time-seriesgraphs/Dashboard1?publish=yes\n\n\n\nhttps://public.tableau.com/app/profile/pin6699/viz/slope-graph/Slope-graph?publish=yes\n\n\n\nhttps://public.tableau.com/app/profile/pin6699/viz/calanderheatmap/Sheet1?publish=yes"
+  },
+  {
+    "objectID": "In_class_Ex/In-class_Ex07/In-class_Ex07.html#time-series-graph",
+    "href": "In_class_Ex/In-class_Ex07/In-class_Ex07.html#time-series-graph",
+    "title": "In-class_Ex07",
+    "section": "",
+    "text": "https://public.tableau.com/app/profile/pin6699/viz/time-seriesgraphs/Dashboard1?publish=yes"
+  },
+  {
+    "objectID": "In_class_Ex/In-class_Ex07/In-class_Ex07.html#slope-graph",
+    "href": "In_class_Ex/In-class_Ex07/In-class_Ex07.html#slope-graph",
+    "title": "In-class_Ex07",
+    "section": "",
+    "text": "https://public.tableau.com/app/profile/pin6699/viz/slope-graph/Slope-graph?publish=yes"
+  },
+  {
+    "objectID": "In_class_Ex/In-class_Ex07/In-class_Ex07.html#calendar-heatmap",
+    "href": "In_class_Ex/In-class_Ex07/In-class_Ex07.html#calendar-heatmap",
+    "title": "In-class_Ex07",
+    "section": "",
+    "text": "https://public.tableau.com/app/profile/pin6699/viz/calanderheatmap/Sheet1?publish=yes"
   },
   {
     "objectID": "Take_Home_Ex/Take-home_Ex01/Take-home_Ex01.html",
