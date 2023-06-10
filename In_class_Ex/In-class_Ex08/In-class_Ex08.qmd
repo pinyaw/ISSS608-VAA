@@ -1,0 +1,18 @@
+---
+title: "In-class_Ex08"
+author: "Yap Pin Yaw"
+---
+
+# Tableau
+
+## Quantitative Point Map:
+
+<https://public.tableau.com/app/profile/pin6699/viz/coords/QuantitativePointMap?publish=yes>
+
+## RealisData2019 Dashboard:
+
+<https://public.tableau.com/app/profile/pin6699/viz/realisdata/Dashboard1?publish=yes>
+
+## Singapore Map:
+
+<https://public.tableau.com/app/profile/pin6699/viz/singaporemap_16863824095430/Sheet1?publish=yes>

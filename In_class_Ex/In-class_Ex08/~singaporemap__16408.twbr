@@ -1,0 +1,635 @@
+<?xml version='1.0' encoding='utf-8' ?>
+
+<!-- build 20231.23.0310.1044                               -->
+<workbook original-version='18.1' source-build='2023.1.0 (20231.23.0310.1044)' source-platform='win' version='18.1' xml:base='https://public.tableau.com' xmlns:user='http://www.tableausoftware.com/xml/user'>
+  <document-format-change-manifest>
+    <_.fcp.AnimationOnByDefault.true...AnimationOnByDefault />
+    <MapboxVectorStylesAndLayers />
+    <_.fcp.MarkAnimation.true...MarkAnimation />
+    <_.fcp.ObjectModelEncapsulateLegacy.true...ObjectModelEncapsulateLegacy />
+    <_.fcp.ObjectModelExtractV2.true...ObjectModelExtractV2 />
+    <_.fcp.ObjectModelTableType.true...ObjectModelTableType />
+    <_.fcp.RelationshipCalculations.true...RelationshipCalculations />
+    <_.fcp.SchemaViewerObjectModel.true...SchemaViewerObjectModel />
+    <SheetIdentifierTracking />
+    <SpatialFileLayer />
+    <_.fcp.VConnDownstreamExtractsWithWarnings.true...VConnDownstreamExtractsWithWarnings />
+    <WindowsPersistSimpleIdentifiers />
+  </document-format-change-manifest>
+  <repository-location id='singaporemap_16863824095430' path='/workbooks' revision='1.0' />
+  <preferences>
+    <preference name='ui.encoding.shelf.height' value='24' />
+    <preference name='ui.shelf.height' value='26' />
+  </preferences>
+  <_.fcp.AnimationOnByDefault.false...style>
+    <_.fcp.AnimationOnByDefault.false..._.fcp.MarkAnimation.true...style-rule element='animation'>
+      <_.fcp.AnimationOnByDefault.false...format attr='animation-on' value='ao-on' />
+    </_.fcp.AnimationOnByDefault.false..._.fcp.MarkAnimation.true...style-rule>
+  </_.fcp.AnimationOnByDefault.false...style>
+  <datasources>
+    <datasource caption='respopagesextod2022' inline='true' name='federated.116l4v918mh6r41a90hwa1jz1sfj' version='18.1'>
+      <connection class='federated'>
+        <named-connections>
+          <named-connection caption='respopagesextod2022' name='textscan.1csf6ub1ywk3up18zcv7o1xk5ubu'>
+            <connection class='textscan' directory='C:/Users/pinya/OneDrive/Desktop/MITB/Visual Analytics/Hands-on_Ex08/data/aspatial' filename='respopagesextod2022.csv' password='' server='' workgroup-auth-mode='as-is' />
+          </named-connection>
+          <named-connection caption='MPSZ-2019' name='ogrdirect.194tw0m0shq5v215rat4a0ray73q'>
+            <connection class='ogrdirect' directory='C:/Users/pinya/OneDrive/Desktop/MITB/Visual Analytics/Hands-on_Ex08/data/geospatial' filename='MPSZ-2019.shp' password='' server='' tablename='' workgroup-auth-mode='as-is' />
+          </named-connection>
+        </named-connections>
+        <_.fcp.ObjectModelEncapsulateLegacy.false...relation connection='ogrdirect.194tw0m0shq5v215rat4a0ray73q' name='MPSZ-2019.shp' table='[MPSZ-2019.shp]' type='table'>
+          <columns>
+            <column datatype='string' name='SUBZONE_N' ordinal='0' />
+            <column datatype='string' name='SUBZONE_C' ordinal='1' />
+            <column datatype='string' name='PLN_AREA_N' ordinal='2' />
+            <column datatype='string' name='PLN_AREA_C' ordinal='3' />
+            <column datatype='string' name='REGION_N' ordinal='4' />
+            <column datatype='string' name='REGION_C' ordinal='5' />
+            <column datatype='spatial' name='Geometry' ordinal='6' />
+          </columns>
+        </_.fcp.ObjectModelEncapsulateLegacy.false...relation>
+        <_.fcp.ObjectModelEncapsulateLegacy.true...relation type='collection'>
+          <relation connection='ogrdirect.194tw0m0shq5v215rat4a0ray73q' name='MPSZ-2019.shp' table='[MPSZ-2019.shp]' type='table'>
+            <columns>
+              <column datatype='string' name='SUBZONE_N' ordinal='0' />
+              <column datatype='string' name='SUBZONE_C' ordinal='1' />
+              <column datatype='string' name='PLN_AREA_N' ordinal='2' />
+              <column datatype='string' name='PLN_AREA_C' ordinal='3' />
+              <column datatype='string' name='REGION_N' ordinal='4' />
+              <column datatype='string' name='REGION_C' ordinal='5' />
+              <column datatype='spatial' name='Geometry' ordinal='6' />
+            </columns>
+          </relation>
+          <relation connection='textscan.1csf6ub1ywk3up18zcv7o1xk5ubu' name='respopagesextod2022.csv' table='[respopagesextod2022#csv]' type='table'>
+            <columns character-set='UTF-8' header='yes' locale='en_SG' separator=','>
+              <column datatype='string' name='PA' ordinal='0' />
+              <column datatype='string' name='SZ' ordinal='1' />
+              <column datatype='string' name='AG' ordinal='2' />
+              <column datatype='string' name='Sex' ordinal='3' />
+              <column datatype='string' name='TOD' ordinal='4' />
+              <column datatype='integer' name='Pop' ordinal='5' />
+              <column datatype='integer' name='Time' ordinal='6' />
+            </columns>
+          </relation>
+        </_.fcp.ObjectModelEncapsulateLegacy.true...relation>
+        <refresh increment-key='' incremental-updates='false' />
+        <metadata-records>
+          <metadata-record class='capability'>
+            <remote-name />
+            <remote-type>0</remote-type>
+            <parent-name>[respopagesextod2022.csv]</parent-name>
+            <remote-alias />
+            <aggregation>Count</aggregation>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='character-set'>&quot;UTF-8&quot;</attribute>
+              <attribute datatype='string' name='collation'>&quot;en_GB&quot;</attribute>
+              <attribute datatype='string' name='field-delimiter'>&quot;,&quot;</attribute>
+              <attribute datatype='string' name='header-row'>&quot;true&quot;</attribute>
+              <attribute datatype='string' name='locale'>&quot;en_SG&quot;</attribute>
+              <attribute datatype='string' name='single-char'>&quot;&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>SUBZONE_N</remote-name>
+            <remote-type>129</remote-type>
+            <local-name>[SUBZONE_N]</local-name>
+            <parent-name>[MPSZ-2019.shp]</parent-name>
+            <remote-alias>SUBZONE_N</remote-alias>
+            <ordinal>0</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <contains-null>true</contains-null>
+            <collation flag='0' name='binary' />
+            <_.fcp.ObjectModelEncapsulateLegacy.true...object-id>[MPSZ-2019.shp_C5188F2F599B4B6AA1859A4A2F4BA941]</_.fcp.ObjectModelEncapsulateLegacy.true...object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>SUBZONE_C</remote-name>
+            <remote-type>129</remote-type>
+            <local-name>[SUBZONE_C]</local-name>
+            <parent-name>[MPSZ-2019.shp]</parent-name>
+            <remote-alias>SUBZONE_C</remote-alias>
+            <ordinal>1</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <contains-null>true</contains-null>
+            <collation flag='0' name='binary' />
+            <_.fcp.ObjectModelEncapsulateLegacy.true...object-id>[MPSZ-2019.shp_C5188F2F599B4B6AA1859A4A2F4BA941]</_.fcp.ObjectModelEncapsulateLegacy.true...object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>PLN_AREA_N</remote-name>
+            <remote-type>129</remote-type>
+            <local-name>[PLN_AREA_N]</local-name>
+            <parent-name>[MPSZ-2019.shp]</parent-name>
+            <remote-alias>PLN_AREA_N</remote-alias>
+            <ordinal>2</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <contains-null>true</contains-null>
+            <collation flag='0' name='binary' />
+            <_.fcp.ObjectModelEncapsulateLegacy.true...object-id>[MPSZ-2019.shp_C5188F2F599B4B6AA1859A4A2F4BA941]</_.fcp.ObjectModelEncapsulateLegacy.true...object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>PLN_AREA_C</remote-name>
+            <remote-type>129</remote-type>
+            <local-name>[PLN_AREA_C]</local-name>
+            <parent-name>[MPSZ-2019.shp]</parent-name>
+            <remote-alias>PLN_AREA_C</remote-alias>
+            <ordinal>3</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <contains-null>true</contains-null>
+            <collation flag='0' name='binary' />
+            <_.fcp.ObjectModelEncapsulateLegacy.true...object-id>[MPSZ-2019.shp_C5188F2F599B4B6AA1859A4A2F4BA941]</_.fcp.ObjectModelEncapsulateLegacy.true...object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>REGION_N</remote-name>
+            <remote-type>129</remote-type>
+            <local-name>[REGION_N]</local-name>
+            <parent-name>[MPSZ-2019.shp]</parent-name>
+            <remote-alias>REGION_N</remote-alias>
+            <ordinal>4</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <contains-null>true</contains-null>
+            <collation flag='0' name='binary' />
+            <_.fcp.ObjectModelEncapsulateLegacy.true...object-id>[MPSZ-2019.shp_C5188F2F599B4B6AA1859A4A2F4BA941]</_.fcp.ObjectModelEncapsulateLegacy.true...object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>REGION_C</remote-name>
+            <remote-type>129</remote-type>
+            <local-name>[REGION_C]</local-name>
+            <parent-name>[MPSZ-2019.shp]</parent-name>
+            <remote-alias>REGION_C</remote-alias>
+            <ordinal>5</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <contains-null>true</contains-null>
+            <collation flag='0' name='binary' />
+            <_.fcp.ObjectModelEncapsulateLegacy.true...object-id>[MPSZ-2019.shp_C5188F2F599B4B6AA1859A4A2F4BA941]</_.fcp.ObjectModelEncapsulateLegacy.true...object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>Geometry</remote-name>
+            <remote-type>8</remote-type>
+            <local-name>[Geometry]</local-name>
+            <parent-name>[MPSZ-2019.shp]</parent-name>
+            <remote-alias>Geometry</remote-alias>
+            <ordinal>6</ordinal>
+            <local-type>spatial</local-type>
+            <aggregation>Collect</aggregation>
+            <contains-null>true</contains-null>
+            <_.fcp.ObjectModelEncapsulateLegacy.true...object-id>[MPSZ-2019.shp_C5188F2F599B4B6AA1859A4A2F4BA941]</_.fcp.ObjectModelEncapsulateLegacy.true...object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>PA</remote-name>
+            <remote-type>129</remote-type>
+            <local-name>[PA]</local-name>
+            <parent-name>[respopagesextod2022.csv]</parent-name>
+            <remote-alias>PA</remote-alias>
+            <ordinal>7</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <scale>1</scale>
+            <width>1073741823</width>
+            <contains-null>true</contains-null>
+            <collation flag='0' name='LEN_RGB' />
+            <_.fcp.ObjectModelEncapsulateLegacy.true...object-id>[respopagesextod2022.csv_32345C53BCE44D19B9CCE192CFED72ED]</_.fcp.ObjectModelEncapsulateLegacy.true...object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>SZ</remote-name>
+            <remote-type>129</remote-type>
+            <local-name>[SZ]</local-name>
+            <parent-name>[respopagesextod2022.csv]</parent-name>
+            <remote-alias>SZ</remote-alias>
+            <ordinal>8</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <scale>1</scale>
+            <width>1073741823</width>
+            <contains-null>true</contains-null>
+            <collation flag='0' name='LEN_RGB' />
+            <_.fcp.ObjectModelEncapsulateLegacy.true...object-id>[respopagesextod2022.csv_32345C53BCE44D19B9CCE192CFED72ED]</_.fcp.ObjectModelEncapsulateLegacy.true...object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>AG</remote-name>
+            <remote-type>129</remote-type>
+            <local-name>[AG]</local-name>
+            <parent-name>[respopagesextod2022.csv]</parent-name>
+            <remote-alias>AG</remote-alias>
+            <ordinal>9</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <scale>1</scale>
+            <width>1073741823</width>
+            <contains-null>true</contains-null>
+            <collation flag='0' name='LEN_RGB' />
+            <_.fcp.ObjectModelEncapsulateLegacy.true...object-id>[respopagesextod2022.csv_32345C53BCE44D19B9CCE192CFED72ED]</_.fcp.ObjectModelEncapsulateLegacy.true...object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>Sex</remote-name>
+            <remote-type>129</remote-type>
+            <local-name>[Sex]</local-name>
+            <parent-name>[respopagesextod2022.csv]</parent-name>
+            <remote-alias>Sex</remote-alias>
+            <ordinal>10</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <scale>1</scale>
+            <width>1073741823</width>
+            <contains-null>true</contains-null>
+            <collation flag='0' name='LEN_RGB' />
+            <_.fcp.ObjectModelEncapsulateLegacy.true...object-id>[respopagesextod2022.csv_32345C53BCE44D19B9CCE192CFED72ED]</_.fcp.ObjectModelEncapsulateLegacy.true...object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>TOD</remote-name>
+            <remote-type>129</remote-type>
+            <local-name>[TOD]</local-name>
+            <parent-name>[respopagesextod2022.csv]</parent-name>
+            <remote-alias>TOD</remote-alias>
+            <ordinal>11</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <scale>1</scale>
+            <width>1073741823</width>
+            <contains-null>true</contains-null>
+            <collation flag='0' name='LEN_RGB' />
+            <_.fcp.ObjectModelEncapsulateLegacy.true...object-id>[respopagesextod2022.csv_32345C53BCE44D19B9CCE192CFED72ED]</_.fcp.ObjectModelEncapsulateLegacy.true...object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>Pop</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[Pop]</local-name>
+            <parent-name>[respopagesextod2022.csv]</parent-name>
+            <remote-alias>Pop</remote-alias>
+            <ordinal>12</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <_.fcp.ObjectModelEncapsulateLegacy.true...object-id>[respopagesextod2022.csv_32345C53BCE44D19B9CCE192CFED72ED]</_.fcp.ObjectModelEncapsulateLegacy.true...object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>Time</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[Time]</local-name>
+            <parent-name>[respopagesextod2022.csv]</parent-name>
+            <remote-alias>Time</remote-alias>
+            <ordinal>13</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <_.fcp.ObjectModelEncapsulateLegacy.true...object-id>[respopagesextod2022.csv_32345C53BCE44D19B9CCE192CFED72ED]</_.fcp.ObjectModelEncapsulateLegacy.true...object-id>
+          </metadata-record>
+        </metadata-records>
+      </connection>
+      <aliases enabled='yes' />
+      <column caption='Pln Area C' datatype='string' name='[PLN_AREA_C]' role='dimension' type='nominal' />
+      <column caption='Pln Area N' datatype='string' name='[PLN_AREA_N]' role='dimension' type='nominal' />
+      <column caption='Region C' datatype='string' name='[REGION_C]' role='dimension' type='nominal' />
+      <column caption='Region N' datatype='string' name='[REGION_N]' role='dimension' type='nominal' />
+      <column caption='Subzone C' datatype='string' name='[SUBZONE_C]' role='dimension' type='nominal' />
+      <column caption='Subzone N' datatype='string' name='[SUBZONE_N]' role='dimension' type='nominal' />
+      <_.fcp.ObjectModelTableType.true...column caption='MPSZ-2019.shp' datatype='table' name='[__tableau_internal_object_id__].[MPSZ-2019.shp_C5188F2F599B4B6AA1859A4A2F4BA941]' role='measure' type='quantitative' />
+      <_.fcp.ObjectModelTableType.true...column caption='respopagesextod2022.csv' datatype='table' name='[__tableau_internal_object_id__].[respopagesextod2022.csv_32345C53BCE44D19B9CCE192CFED72ED]' role='measure' type='quantitative' />
+      <extract _.fcp.ObjectModelExtractV2.true...object-id='' _.fcp.VConnDownstreamExtractsWithWarnings.true...user-specific='false' count='-1' enabled='true' units='records'>
+        <connection access_mode='readonly' authentication='auth-none' author-locale='en_US' class='hyper' dbname='C:/Users/pinya/OneDrive/Desktop/Github/pinyaw/ISSS608-VAA/In_class_Ex/In-class_Ex07/respopagesextod2022.hyper' default-settings='yes' schema='Extract' sslmode='' tablename='Extract' update-time='' username='tableau_internal_user'>
+          <_.fcp.ObjectModelEncapsulateLegacy.false...relation name='MPSZ-2019.shp_C5188F2F599B4B6AA1859A4A2F4BA941' table='[Extract].[MPSZ-2019.shp_C5188F2F599B4B6AA1859A4A2F4BA941]' type='table' />
+          <_.fcp.ObjectModelEncapsulateLegacy.true...relation type='collection'>
+            <relation name='MPSZ-2019.shp_C5188F2F599B4B6AA1859A4A2F4BA941' table='[Extract].[MPSZ-2019.shp_C5188F2F599B4B6AA1859A4A2F4BA941]' type='table' />
+            <relation name='respopagesextod2022.csv_32345C53BCE44D19B9CCE192CFED72ED' table='[Extract].[respopagesextod2022.csv_32345C53BCE44D19B9CCE192CFED72ED]' type='table' />
+          </_.fcp.ObjectModelEncapsulateLegacy.true...relation>
+          <metadata-records>
+            <metadata-record class='column'>
+              <remote-name>SUBZONE_N</remote-name>
+              <remote-type>129</remote-type>
+              <local-name>[SUBZONE_N]</local-name>
+              <parent-name>[MPSZ-2019.shp_C5188F2F599B4B6AA1859A4A2F4BA941]</parent-name>
+              <remote-alias>SUBZONE_N</remote-alias>
+              <ordinal>0</ordinal>
+              <family>MPSZ-2019.shp</family>
+              <local-type>string</local-type>
+              <aggregation>Count</aggregation>
+              <approx-count>332</approx-count>
+              <contains-null>true</contains-null>
+              <collation flag='0' name='binary' />
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>SUBZONE_C</remote-name>
+              <remote-type>129</remote-type>
+              <local-name>[SUBZONE_C]</local-name>
+              <parent-name>[MPSZ-2019.shp_C5188F2F599B4B6AA1859A4A2F4BA941]</parent-name>
+              <remote-alias>SUBZONE_C</remote-alias>
+              <ordinal>1</ordinal>
+              <family>MPSZ-2019.shp</family>
+              <local-type>string</local-type>
+              <aggregation>Count</aggregation>
+              <approx-count>332</approx-count>
+              <contains-null>true</contains-null>
+              <collation flag='0' name='binary' />
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>PLN_AREA_N</remote-name>
+              <remote-type>129</remote-type>
+              <local-name>[PLN_AREA_N]</local-name>
+              <parent-name>[MPSZ-2019.shp_C5188F2F599B4B6AA1859A4A2F4BA941]</parent-name>
+              <remote-alias>PLN_AREA_N</remote-alias>
+              <ordinal>2</ordinal>
+              <family>MPSZ-2019.shp</family>
+              <local-type>string</local-type>
+              <aggregation>Count</aggregation>
+              <approx-count>55</approx-count>
+              <contains-null>true</contains-null>
+              <collation flag='0' name='binary' />
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>PLN_AREA_C</remote-name>
+              <remote-type>129</remote-type>
+              <local-name>[PLN_AREA_C]</local-name>
+              <parent-name>[MPSZ-2019.shp_C5188F2F599B4B6AA1859A4A2F4BA941]</parent-name>
+              <remote-alias>PLN_AREA_C</remote-alias>
+              <ordinal>3</ordinal>
+              <family>MPSZ-2019.shp</family>
+              <local-type>string</local-type>
+              <aggregation>Count</aggregation>
+              <approx-count>55</approx-count>
+              <contains-null>true</contains-null>
+              <collation flag='0' name='binary' />
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>REGION_N</remote-name>
+              <remote-type>129</remote-type>
+              <local-name>[REGION_N]</local-name>
+              <parent-name>[MPSZ-2019.shp_C5188F2F599B4B6AA1859A4A2F4BA941]</parent-name>
+              <remote-alias>REGION_N</remote-alias>
+              <ordinal>4</ordinal>
+              <family>MPSZ-2019.shp</family>
+              <local-type>string</local-type>
+              <aggregation>Count</aggregation>
+              <approx-count>5</approx-count>
+              <contains-null>true</contains-null>
+              <collation flag='0' name='binary' />
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>REGION_C</remote-name>
+              <remote-type>129</remote-type>
+              <local-name>[REGION_C]</local-name>
+              <parent-name>[MPSZ-2019.shp_C5188F2F599B4B6AA1859A4A2F4BA941]</parent-name>
+              <remote-alias>REGION_C</remote-alias>
+              <ordinal>5</ordinal>
+              <family>MPSZ-2019.shp</family>
+              <local-type>string</local-type>
+              <aggregation>Count</aggregation>
+              <approx-count>5</approx-count>
+              <contains-null>true</contains-null>
+              <collation flag='0' name='binary' />
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>Geometry</remote-name>
+              <remote-type>128</remote-type>
+              <local-name>[Geometry]</local-name>
+              <parent-name>[MPSZ-2019.shp_C5188F2F599B4B6AA1859A4A2F4BA941]</parent-name>
+              <remote-alias>Geometry</remote-alias>
+              <ordinal>6</ordinal>
+              <family>MPSZ-2019.shp</family>
+              <local-type>spatial</local-type>
+              <aggregation>Collect</aggregation>
+              <approx-count>332</approx-count>
+              <contains-null>true</contains-null>
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>PA</remote-name>
+              <remote-type>129</remote-type>
+              <local-name>[PA]</local-name>
+              <parent-name>[respopagesextod2022.csv_32345C53BCE44D19B9CCE192CFED72ED]</parent-name>
+              <remote-alias>PA</remote-alias>
+              <ordinal>7</ordinal>
+              <family>respopagesextod2022.csv</family>
+              <local-type>string</local-type>
+              <aggregation>Count</aggregation>
+              <approx-count>63</approx-count>
+              <contains-null>true</contains-null>
+              <collation flag='0' name='LEN_RGB' />
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>SZ</remote-name>
+              <remote-type>129</remote-type>
+              <local-name>[SZ]</local-name>
+              <parent-name>[respopagesextod2022.csv_32345C53BCE44D19B9CCE192CFED72ED]</parent-name>
+              <remote-alias>SZ</remote-alias>
+              <ordinal>8</ordinal>
+              <family>respopagesextod2022.csv</family>
+              <local-type>string</local-type>
+              <aggregation>Count</aggregation>
+              <approx-count>811</approx-count>
+              <contains-null>true</contains-null>
+              <collation flag='0' name='LEN_RGB' />
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>AG</remote-name>
+              <remote-type>129</remote-type>
+              <local-name>[AG]</local-name>
+              <parent-name>[respopagesextod2022.csv_32345C53BCE44D19B9CCE192CFED72ED]</parent-name>
+              <remote-alias>AG</remote-alias>
+              <ordinal>9</ordinal>
+              <family>respopagesextod2022.csv</family>
+              <local-type>string</local-type>
+              <aggregation>Count</aggregation>
+              <approx-count>19</approx-count>
+              <contains-null>true</contains-null>
+              <collation flag='0' name='LEN_RGB' />
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>Sex</remote-name>
+              <remote-type>129</remote-type>
+              <local-name>[Sex]</local-name>
+              <parent-name>[respopagesextod2022.csv_32345C53BCE44D19B9CCE192CFED72ED]</parent-name>
+              <remote-alias>Sex</remote-alias>
+              <ordinal>10</ordinal>
+              <family>respopagesextod2022.csv</family>
+              <local-type>string</local-type>
+              <aggregation>Count</aggregation>
+              <approx-count>2</approx-count>
+              <contains-null>true</contains-null>
+              <collation flag='0' name='LEN_RGB' />
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>TOD</remote-name>
+              <remote-type>129</remote-type>
+              <local-name>[TOD]</local-name>
+              <parent-name>[respopagesextod2022.csv_32345C53BCE44D19B9CCE192CFED72ED]</parent-name>
+              <remote-alias>TOD</remote-alias>
+              <ordinal>11</ordinal>
+              <family>respopagesextod2022.csv</family>
+              <local-type>string</local-type>
+              <aggregation>Count</aggregation>
+              <approx-count>8</approx-count>
+              <contains-null>true</contains-null>
+              <collation flag='0' name='LEN_RGB' />
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>Pop</remote-name>
+              <remote-type>20</remote-type>
+              <local-name>[Pop]</local-name>
+              <parent-name>[respopagesextod2022.csv_32345C53BCE44D19B9CCE192CFED72ED]</parent-name>
+              <remote-alias>Pop</remote-alias>
+              <ordinal>12</ordinal>
+              <family>respopagesextod2022.csv</family>
+              <local-type>integer</local-type>
+              <aggregation>Sum</aggregation>
+              <approx-count>153</approx-count>
+              <contains-null>true</contains-null>
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>Time</remote-name>
+              <remote-type>20</remote-type>
+              <local-name>[Time]</local-name>
+              <parent-name>[respopagesextod2022.csv_32345C53BCE44D19B9CCE192CFED72ED]</parent-name>
+              <remote-alias>Time</remote-alias>
+              <ordinal>13</ordinal>
+              <family>respopagesextod2022.csv</family>
+              <local-type>integer</local-type>
+              <aggregation>Sum</aggregation>
+              <approx-count>1</approx-count>
+              <contains-null>true</contains-null>
+            </metadata-record>
+          </metadata-records>
+        </connection>
+      </extract>
+      <layout _.fcp.SchemaViewerObjectModel.false...dim-percentage='0.5' _.fcp.SchemaViewerObjectModel.false...measure-percentage='0.4' dim-ordering='alphabetic' measure-ordering='alphabetic' show-structure='true' />
+      <semantic-values>
+        <semantic-value key='[Country].[Name]' value='&quot;Singapore&quot;' />
+      </semantic-values>
+      <_.fcp.ObjectModelEncapsulateLegacy.true...object-graph>
+        <objects>
+          <object caption='MPSZ-2019.shp' id='MPSZ-2019.shp_C5188F2F599B4B6AA1859A4A2F4BA941'>
+            <properties context=''>
+              <relation connection='ogrdirect.194tw0m0shq5v215rat4a0ray73q' name='MPSZ-2019.shp' table='[MPSZ-2019.shp]' type='table'>
+                <columns>
+                  <column datatype='string' name='SUBZONE_N' ordinal='0' />
+                  <column datatype='string' name='SUBZONE_C' ordinal='1' />
+                  <column datatype='string' name='PLN_AREA_N' ordinal='2' />
+                  <column datatype='string' name='PLN_AREA_C' ordinal='3' />
+                  <column datatype='string' name='REGION_N' ordinal='4' />
+                  <column datatype='string' name='REGION_C' ordinal='5' />
+                  <column datatype='spatial' name='Geometry' ordinal='6' />
+                </columns>
+              </relation>
+            </properties>
+            <properties context='extract'>
+              <relation name='MPSZ-2019.shp_C5188F2F599B4B6AA1859A4A2F4BA941' table='[Extract].[MPSZ-2019.shp_C5188F2F599B4B6AA1859A4A2F4BA941]' type='table' />
+            </properties>
+          </object>
+          <object caption='respopagesextod2022.csv' id='respopagesextod2022.csv_32345C53BCE44D19B9CCE192CFED72ED'>
+            <properties context=''>
+              <relation connection='textscan.1csf6ub1ywk3up18zcv7o1xk5ubu' name='respopagesextod2022.csv' table='[respopagesextod2022#csv]' type='table'>
+                <columns character-set='UTF-8' header='yes' locale='en_SG' separator=','>
+                  <column datatype='string' name='PA' ordinal='0' />
+                  <column datatype='string' name='SZ' ordinal='1' />
+                  <column datatype='string' name='AG' ordinal='2' />
+                  <column datatype='string' name='Sex' ordinal='3' />
+                  <column datatype='string' name='TOD' ordinal='4' />
+                  <column datatype='integer' name='Pop' ordinal='5' />
+                  <column datatype='integer' name='Time' ordinal='6' />
+                </columns>
+              </relation>
+            </properties>
+            <properties context='extract'>
+              <relation name='respopagesextod2022.csv_32345C53BCE44D19B9CCE192CFED72ED' table='[Extract].[respopagesextod2022.csv_32345C53BCE44D19B9CCE192CFED72ED]' type='table' />
+            </properties>
+          </object>
+        </objects>
+        <relationships>
+          <relationship>
+            <expression op='='>
+              <expression op='[SUBZONE_N]' />
+              <expression _.fcp.RelationshipCalculations.false...op='[UPPER(SZ)]' _.fcp.RelationshipCalculations.true...op='UPPER([SZ])' />
+            </expression>
+            <first-end-point object-id='MPSZ-2019.shp_C5188F2F599B4B6AA1859A4A2F4BA941' />
+            <second-end-point object-id='respopagesextod2022.csv_32345C53BCE44D19B9CCE192CFED72ED' />
+          </relationship>
+        </relationships>
+      </_.fcp.ObjectModelEncapsulateLegacy.true...object-graph>
+    </datasource>
+  </datasources>
+  <mapsources>
+    <mapsource name='Tableau' />
+  </mapsources>
+  <worksheets>
+    <worksheet name='Sheet 1'>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='respopagesextod2022' name='federated.116l4v918mh6r41a90hwa1jz1sfj' />
+          </datasources>
+          <mapsources>
+            <mapsource name='Tableau' />
+          </mapsources>
+          <datasource-dependencies datasource='federated.116l4v918mh6r41a90hwa1jz1sfj'>
+            <column datatype='spatial' name='[Geometry]' role='measure' type='nominal' />
+            <column datatype='integer' name='[Pop]' role='measure' type='quantitative' />
+            <column caption='Subzone N' datatype='string' name='[SUBZONE_N]' role='dimension' type='nominal' />
+            <column-instance column='[Geometry]' derivation='Collect' name='[clct:Geometry:nk]' pivot='key' type='nominal' />
+            <column-instance column='[SUBZONE_N]' derivation='None' name='[none:SUBZONE_N:nk]' pivot='key' type='nominal' />
+            <column-instance column='[Pop]' derivation='Sum' name='[sum:Pop:qk]' pivot='key' type='quantitative' />
+          </datasource-dependencies>
+          <aggregation value='true' />
+        </view>
+        <style>
+          <style-rule element='axis'>
+            <encoding attr='space' class='0' field='[federated.116l4v918mh6r41a90hwa1jz1sfj].[Longitude (generated)]' field-type='quantitative' max='11604574.461093359' min='11516863.398775069' projection='EPSG:3857' range-type='fixed' scope='cols' type='space' />
+            <encoding attr='space' class='0' field='[federated.116l4v918mh6r41a90hwa1jz1sfj].[Latitude (generated)]' field-type='quantitative' max='171044.12860923505' min='121421.66281554761' projection='EPSG:3857' range-type='fixed' scope='rows' type='space' />
+          </style-rule>
+          <style-rule element='map'>
+            <format attr='washout' value='0.0' />
+          </style-rule>
+        </style>
+        <panes>
+          <pane selection-relaxation-option='selection-relaxation-allow'>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Multipolygon' />
+            <encodings>
+              <color column='[federated.116l4v918mh6r41a90hwa1jz1sfj].[sum:Pop:qk]' />
+              <lod column='[federated.116l4v918mh6r41a90hwa1jz1sfj].[clct:Geometry:nk]' />
+              <lod column='[federated.116l4v918mh6r41a90hwa1jz1sfj].[none:SUBZONE_N:nk]' />
+              <geometry column='[federated.116l4v918mh6r41a90hwa1jz1sfj].[clct:Geometry:nk]' />
+            </encodings>
+          </pane>
+        </panes>
+        <rows>[federated.116l4v918mh6r41a90hwa1jz1sfj].[Latitude (generated)]</rows>
+        <cols>[federated.116l4v918mh6r41a90hwa1jz1sfj].[Longitude (generated)]</cols>
+      </table>
+      <simple-id uuid='{C6A6C0E6-AEA1-489A-A4E0-18BBD40AC4DA}' />
+    </worksheet>
+  </worksheets>
+  <windows source-height='30'>
+    <window class='worksheet' maximized='true' name='Sheet 1'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+        <edge name='top'>
+          <strip size='2147483647'>
+            <card type='columns' />
+          </strip>
+          <strip size='2147483647'>
+            <card type='rows' />
+          </strip>
+          <strip size='31'>
+            <card type='title' />
+          </strip>
+        </edge>
+        <edge name='right'>
+          <strip size='160'>
+            <card pane-specification-id='0' param='[federated.116l4v918mh6r41a90hwa1jz1sfj].[sum:Pop:qk]' type='color' />
+          </strip>
+        </edge>
+      </cards>
+      <simple-id uuid='{6532E8F5-FEE4-45B7-BB0F-39895F39B601}' />
+    </window>
+  </windows>
+</workbook>

@@ -9,3 +9,293 @@ execute:
   warning: false
 editor: visual
 ---
+
+# Load Packages
+
+The following code chunk will load and install the necessary packages
+
+```{r}
+#| code-fold: false
+pacman:::p_load(jsonlite, tidygraph, ggraph, visNetwork, graphlayouts, ggforce, tidytext, tidyverse, ggplot2,plotly,skimr,DT, igraph, scales,viridis,colorspace, stringr, knitr, pander)
+```
+
+## Import Data
+
+Since the raw data obtained from the VAST Challenge are in `json` format, `fromJSON` is being used to extract the data information. All the bundles files are being extracted as well.
+
+```{r}
+#| code-fold: false
+MC3 <-fromJSON("data/MC3.json")
+```
+
+## Data Extraction
+
+`as_tibble()` function to turn the nodes and edges from MC2 into a data frame.
+
+The `lubridate` package is utilized to determine the various types of days for analysis. In our analysis, `ymd()` is being used to convert `arrivaldate` field from character data type to date data type. While `year()` is being used to extract the only year value based on the arrival date.
+
+::: panel-tabset
+## Nodes
+
+```{r}
+MC3_nodes <- as_tibble(MC3$nodes) %>%
+    distinct() %>%
+    mutate(country = as.character(country),
+           id = as.character(id),
+           product_services = as.character(product_services),
+           revenue_omu = as.numeric(as.character(revenue_omu)),
+           type = as.character(type)) %>%
+    select (id, country, type, revenue_omu, product_services)
+```
+
+## Edges
+
+```{r}
+MC3_edges <- as_tibble(MC3$links) %>%
+  distinct() %>%
+  mutate(source = as.character(source),
+         target = as.character(target),
+         type = as.character(type)) %>%
+  group_by(source, target, type) %>% 
+  summarise(weights=n()) %>%
+  filter(source!=target) %>%
+  ungroup()
+```
+:::
+
+## Distribution of Nodes
+
+Higher count on beneficial owners
+
+```{r}
+bar_plot <-ggplot(data = MC3_nodes,
+              aes(x = type, fill = type)) +
+              geom_bar()
+
+#To allow better interaction
+ggplotly(bar_plot, tooltip ="y")
+```
+
+Details of the nodes
+
+```{r}
+DT::datatable(MC3_nodes)
+```
+
+## Edge
+
+```{r}
+barplot_edge <-ggplot(data = MC3_edges,
+                aes(x = type, fill = type)) +
+            geom_bar()
+ggplotly(barplot_edge, tooltip = "y")
+```
+
+## Data Analysis
+
+### Tokenisation
+
+```{r}
+token_nodes <- MC3_nodes %>%
+  unnest_tokens(word, 
+                product_services)
+```
+
+### Removing stopwords
+
+```{r}
+stop2 <- c("NA","character","0","unknown")
+
+#stopwords_removed <- token_nodes %>% 
+#  anti_join(stop_words) %>%
+#  filter (!word %in% stop2 & !is.na(word))
+
+stopwords_removed <- token_nodes %>%
+  anti_join(stop_words) %>%
+  filter(!str_detect(word, paste(stop2, collapse = "|")) & !is.na(word))
+
+stopwords_removed %>%
+  count(word, sort = TRUE) %>%
+  top_n(15) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(x = word, y = n)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip() +
+      labs(x = "Count",
+      y = "Unique words",
+      title = "Count of unique words found in product_services field")
+
+```
+
+Due to the vast amount of data, we are to focus only the top 4 stop words excluding "character", "0" and "unknown" as they do not provide any useful information and context for the grouping. The following words include:
+
+(1) products
+(2) fish
+(3) seafood
+(4) frozen
+(5) services
+
+### Filter only the graph with the top 5 words count
+
+```{r}
+#mc3 nodes that contains the top 5 keywords'id
+
+# Words to filter by
+filter_words <- c("products", "fish", "seafood", "frozen", "services")
+
+#filter_words <- c("products")
+
+# Filter the dataframe based on the specified words in column 3
+filtered_nodes <- MC3_nodes[grepl(paste(filter_words, collapse = "|"), MC3_nodes$product_services), ] %>%
+  select (id) %>%
+  distinct()
+
+
+filtered_edges <- MC3_edges[MC3_edges$source %in% filtered_nodes$id | MC3_edges$target %in% filtered_nodes$id, ] %>%
+  distinct()
+
+```
+
+## Network graph
+
+```{r}
+id1 <- filtered_edges %>%
+  select(source) %>%
+  rename(id = source)
+id2 <- filtered_edges %>%
+  select(target) %>%
+  rename(id = target)
+mc3_nodes1 <- rbind(id1, id2) %>%
+  distinct() %>%
+  left_join(MC3_nodes,
+            unmatched = "drop")
+
+
+mc3_graph <- tbl_graph(nodes = mc3_nodes1,
+                       edges = filtered_edges,
+                       directed = FALSE)%>%
+  mutate(betweenness_centrality = centrality_betweenness(),
+         closeness_centrality = centrality_closeness())
+```
+
+```{r}
+
+# Replace NaN values with 0 in the 'closeness_centrality' column
+mc3_graph <- mc3_graph %>%
+  mutate(closeness_centrality = replace(closeness_centrality, is.nan(closeness_centrality), 0))
+
+c_graph_analysis <- as.data.frame(mc3_graph)
+mean_graph <- mean(c_graph_analysis$betweenness_centrality)
+
+
+
+# Filter nodes based on betweenness centrality
+filtered_graph <- mc3_graph %>%
+  filter(betweenness_centrality >= mean_graph)
+```
+
+```{r}
+# Identify single nodes (degree 0)
+single_nodes <- V(filtered_graph)[degree(filtered_graph) == 0]
+
+# Remove single nodes from the filtered graph
+filtered_graph <- delete.vertices(filtered_graph, single_nodes)
+
+
+GNC <- cluster_louvain(filtered_graph, weights = NULL)
+```
+
+```{r}
+set.seed(1234)
+# Get the unique social groups in the filtered graph
+unique_groups <- unique(membership(GNC))
+
+# Set the node colors using the rainbow_hcl palette from the colorspace package
+node_colors <- rainbow_hcl(length(unique_groups))
+
+# Add the node colors to the filtered graph
+V(filtered_graph)$color <- node_colors[membership(GNC)]
+
+# Create a data frame with the membership numbers and corresponding colors
+# Create a data frame with the membership numbers, colors, and labels
+legend_data <- data.frame(Membership = unique_groups, Color = node_colors)
+
+
+# Plot the filtered graph
+ggraph_output <- ggraph(filtered_graph, layout = "fr") +
+  geom_edge_link(aes(alpha = 0.5)) +
+  geom_node_point(aes(size = betweenness_centrality, color = as.factor(membership(GNC))), alpha = 0.5) +
+  geom_node_text(aes(label = membership(GNC)), vjust = -1) +
+  scale_size_continuous(range = c(1, 10)) +
+  scale_color_manual(values = node_colors) +  # Set the node colors manually
+  guides(color = FALSE) +  # Remove the color legend
+  theme_graph()
+
+ggraph_output
+
+
+
+```
+
+Due to the limited size of the plot, the legend of each cluster is being shown below.
+
+```{r}
+legend_plot <- ggplot(legend_data, aes(x = Membership, y = 0, color = Color)) +
+  geom_point(size = 5, show.legend = FALSE, position = position_nudge(y = -0.2)) +
+  labs(x = "Cluster", y = "") +
+  scale_x_continuous(breaks = unique_groups) +
+  scale_color_identity(guide = "legend") +  # Add color legend
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 0, vjust = 100, hjust = 0.5),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        panel.grid.major = element_blank(),  # Remove major gridlines
+        panel.grid.minor = element_blank())  # Remove minor gridlines
+legend_plot
+```
+
+```{r}
+num_clusters <- length(unique(GNC$membership))
+num_clusters
+```
+
+## To analyse for each group and see whats their similarity
+
+Nodes in each cluster and their respective product_services
+
+::: panel-tabset
+
+## Cluster 1
+```{r}
+# Get the membership vector indicating the community assignment for each node
+membership <- membership(GNC)
+
+# Extract the nodes 
+nodes <- V(filtered_graph)[membership == 1]  
+
+# Extract the edges and their attributes based on the membership
+edges <- E(filtered_graph)[membership == 1]  # Replace '1' with the desired membership cluster
+
+
+# To extract the other columns under the same cluster
+product_services <- nodes$product_services
+type <- nodes$type
+country <- nodes$country
+revenue_omu <- nodes$revenue_omu
+id <- nodes$id
+edge_type <- edges$type
+
+# Combine the nodes and product services into a data frame
+df <- cbind(id, country, type,edge_type, revenue_omu, product_services)
+
+# Display the data frame in table format
+pander(kable(df))
+```
+:::
+
+::: callout-tip
+`kable()` function converts the data frame df into a nicely formatted table
+
+`pander()` function displays the table in a viewer-friendly format.
+:::
