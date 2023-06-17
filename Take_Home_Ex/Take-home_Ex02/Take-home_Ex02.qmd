@@ -43,7 +43,7 @@ MC2 <-fromJSON("data/mc2_challenge_graph.json")
 ### 3.3.1 Node Attribute
 
 | Node Name  | Data Type | Description                                                    |
-|-----------------|-----------------|---------------------------------------|
+|------------------|------------------|-------------------------------------|
 | id         | chr       | Name of the company that originated (or received) the shipment |
 | shpcountry | chr       | Country the company most often associated with when shipping   |
 | rcvcountry | chr       | Country the company most often associated with when receiving  |
@@ -51,7 +51,7 @@ MC2 <-fromJSON("data/mc2_challenge_graph.json")
 ### 3.3.2 Edge Attribute
 
 | Edge Name        | Data Type | Description                                                                                                                                                                                                                                                               |
-|-----------------|-----------------|---------------------------------------|
+|------------------|------------------|-------------------------------------|
 | source           | chr       | Name of the company that originated the shipment                                                                                                                                                                                                                          |
 | target           | chr       | Name of the company that received the shipment                                                                                                                                                                                                                            |
 | arrivaldate      | chr       | Date the shipment arrived at port in YYYY-MM-DD format                                                                                                                                                                                                                    |
@@ -1374,8 +1374,8 @@ In hscode 304620, node **Mar del Este CJSC** remained to the top 10% that consis
 Below codes are used to check the change in distinct trading partner across the years for **Mar del Este CJSC** as a **target** and **source** respectivly.
 
 ::: panel-tabset
-
 ## Target
+
 ```{r}
 edge_try <- MC2_edges %>%
     filter(Year == "2028", source!=target, target == "Mar del Este CJSC" , hscode == 304620) %>%
@@ -1445,6 +1445,7 @@ edges_all
 ```
 
 ## Source
+
 ```{r}
 edge_try <- MC2_edges %>%
     filter(Year == "2028", source!=target, source == "Mar del Este CJSC" , hscode == 304620) %>%
@@ -1513,8 +1514,7 @@ edges_all
 ```
 :::
 
-From the result above, it is observed that **Mar del Este CJSC** is not a **source** for hscode 304620.
-While being a **target**, it is observed the number of distinct trading partners was dropped to 31 in 2031 as compared to a high of 39 trading partners in 2028. Based on the earlier network graph plot, it is also observed that the number of nodes that are the top 10% are also decreasing in count as the graph plotted are simplified over the years. This might be due to the increase in restrictions & capturing of illegal activities happened for hscode 304620 trading activities, leading to the decrease in trading partners overall.
+From the result above, it is observed that **Mar del Este CJSC** is not a **source** for hscode 304620. While being a **target**, it is observed the number of distinct trading partners was dropped to 31 in 2031 as compared to a high of 39 trading partners in 2028. Based on the earlier network graph plot, it is also observed that the number of nodes that are the top 10% are also decreasing in count as the graph plotted are simplified over the years. This might be due to the increase in restrictions & capturing of illegal activities happened for hscode 304620 trading activities, leading to the decrease in trading partners overall.
 
 ### 4.3.1 HSCode 630900
 
@@ -1524,5 +1524,4 @@ While for 630900, compared to 304620, the nodes that are involved and highlighte
 
 Throughout this exercise, the ability to use network graph allow the users to have a visualization on the connection between the different organizations. Patterns observed above can be highlighted to see if similar patterns such as reducing in trading partners or isolating trading partners are signs of potential illegal activities involvement.
 
-To further improve the analysis, known illegal organizations are suggested to be identified first in order to allow the analyst to study the patterns and behavior of such organizations. With this information, other analysis such as correlation between value goods traded and potential illegal organizations can be carried out. The patterns observed would allow analysts to identify potential illegal organizations more accurately.  
-
+To further improve the analysis, known illegal organizations are suggested to be identified first in order to allow the analyst to study the patterns and behavior of such organizations. With this information, other analysis such as correlation between value goods traded and potential illegal organizations can be carried out. The patterns observed would allow analysts to identify potential illegal organizations more accurately.

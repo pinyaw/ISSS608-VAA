@@ -10,16 +10,16 @@ execute:
 editor: visual
 ---
 
-# Load Packages
+# 1. Load Packages
 
 The following code chunk will load and install the necessary packages
 
 ```{r}
 #| code-fold: false
-pacman:::p_load(jsonlite, tidygraph, ggraph, visNetwork, graphlayouts, ggforce, tidytext, tidyverse, ggplot2,plotly,skimr,DT, igraph, scales,viridis,colorspace, stringr, knitr, pander)
+pacman:::p_load(jsonlite, tidygraph, ggraph, visNetwork, graphlayouts, ggforce, tidytext, tidyverse, ggplot2, plotly, skimr, DT, igraph, scales, viridis, colorspace, stringr, knitr, wordcloud)
 ```
 
-## Import Data
+# 2. Import Data
 
 Since the raw data obtained from the VAST Challenge are in `json` format, `fromJSON` is being used to extract the data information. All the bundles files are being extracted as well.
 
@@ -28,16 +28,18 @@ Since the raw data obtained from the VAST Challenge are in `json` format, `fromJ
 MC3 <-fromJSON("data/MC3.json")
 ```
 
-## Data Extraction
+# 3. Data Extraction
 
-`as_tibble()` function to turn the nodes and edges from MC2 into a data frame.
+`as_tibble()` function to turn the nodes and edges from MC3 into a data frame.
 
-The `lubridate` package is utilized to determine the various types of days for analysis. In our analysis, `ymd()` is being used to convert `arrivaldate` field from character data type to date data type. While `year()` is being used to extract the only year value based on the arrival date.
+The `lubridate` package is utilized to determine the various types of days for analysis. We have to fist use `as.character` to transform all the various data columns into readable data type.
+In addition, `as.numeric` is used to convert **revenue_omu** into numeric data type such that continuous analysis can be carried out.
 
 ::: panel-tabset
 ## Nodes
 
 ```{r}
+#| code-fold: false
 MC3_nodes <- as_tibble(MC3$nodes) %>%
     distinct() %>%
     mutate(country = as.character(country),
@@ -51,6 +53,7 @@ MC3_nodes <- as_tibble(MC3$nodes) %>%
 ## Edges
 
 ```{r}
+#| code-fold: false
 MC3_edges <- as_tibble(MC3$links) %>%
   distinct() %>%
   mutate(source = as.character(source),
@@ -63,45 +66,126 @@ MC3_edges <- as_tibble(MC3$links) %>%
 ```
 :::
 
-## Distribution of Nodes
+# 4. Data Distribution
 
-Higher count on beneficial owners
+## 4.1 Nodes Distribution
+
+### 4.1.1 Types Distribution
+
+First we looked into the distribution of the types of nodes that are present. From the bar graph below, **Beneficial Owner** tends to have the highest count, followed by **Company** & **Company Contacts**.
 
 ```{r}
-bar_plot <-ggplot(data = MC3_nodes,
-              aes(x = type, fill = type)) +
-              geom_bar()
+typecount <-table(MC3_nodes$type)
+percentage_type <- typecount/ sum(typecount)
+percentage_type_labels <- paste0(round(percentage_type*100),"%")
+df_type <- data.frame(typecount,percentage_type,percentage_type_labels)
 
-#To allow better interaction
-ggplotly(bar_plot, tooltip ="y")
+#Change column names
+colnames(df_type)[1] <- "type"
+colnames(df_type)[2] <- "Count"
+colnames(df_type)[3] <- "type2"
+colnames(df_type)[4] <- "percentage_type"
+
+fig_type <- df_type |> 
+  plot_ly() |> 
+  add_trace(
+    labels = ~type,
+    values = ~Count, 
+    type = "pie") %>%
+  layout(title = 'Nodes Distribution', plot_bgcolor = "#e5ecf6")
+fig_type
+
 ```
 
-Details of the nodes
+### 4.1.2 Revenue OMU Distribution
+
+Based on the boxplot below, most of traded activities with substantial amount of revenue OMU is being found in the `Beneficial Owner` type of relationship. `Company` type of relationship has a very sparse distribution with the main bulk being below 16k (median). While `Company Contact` only had one trasanction that had its revenue omu recorded.
 
 ```{r}
-DT::datatable(MC3_nodes)
+plot_ly(
+  data = MC3_nodes,
+  y = ~revenue_omu,
+  x = ~type,
+  type = "box",
+  boxmean = TRUE,
+  color = ~type,
+  showlegend = FALSE,
+  boxpoints = "all"
+) %>%
+layout(title = 'Revenue OMU across type')
 ```
 
-## Edge
+We further look into the top 10 nodes with a high value revenue omu. Nodes with large revenue_omu tend to be more likely to be involved in illegal activities.
 
 ```{r}
-barplot_edge <-ggplot(data = MC3_edges,
-                aes(x = type, fill = type)) +
-            geom_bar()
-ggplotly(barplot_edge, tooltip = "y")
+# Sort the data by revenue_omu in descending order
+data <- MC3_nodes[order(-MC3_nodes$revenue_omu), ]
+
+# Take the top 10 rows
+top_10 <- head(data, 10)
+
+# Create the bar plot
+bar_plot <- ggplot(top_10, aes(x = revenue_omu, y = reorder(id, revenue_omu))) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(x = "Revenue (OMU)", y = "ID") +
+  ggtitle("Top 10 Users by Revenue") +
+  theme_minimal()
+
+ggplotly(bar_plot, tooltip ="x")
 ```
 
-## Data Analysis
+## 4.2 Edges Distribution
 
-### Tokenisation
+In the edge dataset, the types of connection we found between the sources and targets are mainly **Beneficial Owner** & **Company Contacts** with the former holding 69.9%.
 
 ```{r}
+typecount <-table(MC3_edges$type)
+percentage_type <- typecount/ sum(typecount)
+percentage_type_labels <- paste0(round(percentage_type*100),"%")
+df_type <- data.frame(typecount,percentage_type,percentage_type_labels)
+
+#Change column names
+colnames(df_type)[1] <- "type"
+colnames(df_type)[2] <- "Count"
+colnames(df_type)[3] <- "type2"
+colnames(df_type)[4] <- "percentage_type"
+
+fig_type <- df_type |> 
+  plot_ly() |> 
+  add_trace(
+    labels = ~type,
+    values = ~Count, 
+    type = "pie") %>%
+  layout(title = 'Nodes Distribution', plot_bgcolor = "#e5ecf6")
+fig_type
+
+```
+
+::: callout-tip
+`plot_ly()` are being used to enable interaction with the graph. Users are able to view the count of the occurrence with by hovering over the data that the user preferred.
+:::
+
+
+# 5. Data Analysis
+
+## 5.1 Text Analysis
+
+### 5.1.1 Tokenisation
+
+To further understand what is the product services distribution across the nodes, tokenisation process is being carried out.
+
+The `unnest_tokens()` function in the `tidytext` package is used for tokenisation, which is the process of breaking text into individual words or tokens. It takes a text column as input and creates a new data frame with two columns: one for the document identifier and another for the tokens.
+
+```{r}
+#| code-fold: false
 token_nodes <- MC3_nodes %>%
   unnest_tokens(word, 
                 product_services)
 ```
 
-### Removing stopwords
+### 5.1.2 Removing stopwords
+
+Stopwords are necessary to be removed as they tend to not add any valuable insights to the analysis. In addition, **"NA"**, **"character"**, **"0"** and **"unknown"** are also being removed as they do not provide any useful information and context for the grouping.
 
 ```{r}
 stop2 <- c("NA","character","0","unknown")
@@ -114,33 +198,34 @@ stopwords_removed <- token_nodes %>%
   anti_join(stop_words) %>%
   filter(!str_detect(word, paste(stop2, collapse = "|")) & !is.na(word))
 
+set.seed(1234)
 stopwords_removed %>%
-  count(word, sort = TRUE) %>%
-  top_n(15) %>%
-  mutate(word = reorder(word, n)) %>%
-  ggplot(aes(x = word, y = n)) +
-  geom_col() +
-  xlab(NULL) +
-  coord_flip() +
-      labs(x = "Count",
-      y = "Unique words",
-      title = "Count of unique words found in product_services field")
+  count(word) %>%
+  with(wordcloud(word, n, max.words = 100))
 
 ```
+::: callout-note
+`set_seed()` is being used to ensure the same orientation of the graph will always be displayed.
+:::
 
-Due to the vast amount of data, we are to focus only the top 4 stop words excluding "character", "0" and "unknown" as they do not provide any useful information and context for the grouping. The following words include:
+With the above word cloud plot, we are able to identify the top words with the highest count.
+Due to the vast amount of data, this exercise will focus only the top 5 stop words.
 
-(1) products
-(2) fish
-(3) seafood
-(4) frozen
-(5) services
+The following words include:
+**(1) products**
+**(2) fish**
+**(3) seafood**
+**(4) frozen**
+**(5) services**
 
-### Filter only the graph with the top 5 words count
+### 5.1.3 Filter top 5 words in edges and nodes
+
+As the  `product_services` column is only available in the nodes dataset, we are to filter the nodes that contains the 5 listed words.
+
+The filtered nodes is then being used to filter the edges where the source or target contain nodes that are in the filtered nodes set.
 
 ```{r}
-#mc3 nodes that contains the top 5 keywords'id
-
+#| code-fold: false
 # Words to filter by
 filter_words <- c("products", "fish", "seafood", "frozen", "services")
 
@@ -157,9 +242,16 @@ filtered_edges <- MC3_edges[MC3_edges$source %in% filtered_nodes$id | MC3_edges$
 
 ```
 
-## Network graph
+## 5.2 Network Analysis
+
+To explore further on the network analysis, the nodes information are being gathered based on the `filtered_edge`. In addition, this exercise have added 3 different centralities, which include:
+
+**(1) Betweenness Centrality**
+**(2) Closeness Centrality**
+**(3) Eigenvector Centrality**
 
 ```{r}
+#| code-fold: false
 id1 <- filtered_edges %>%
   select(source) %>%
   rename(id = source)
@@ -176,24 +268,29 @@ mc3_graph <- tbl_graph(nodes = mc3_nodes1,
                        edges = filtered_edges,
                        directed = FALSE)%>%
   mutate(betweenness_centrality = centrality_betweenness(),
-         closeness_centrality = centrality_closeness())
+         closeness_centrality = centrality_closeness(),
+         eigen_centrality = centrality_eigen())
 ```
 
+### 5.2.1 Betweenness Centrality
+
+Betweenness centrality is a metric that assesses the significance of a node in a network by measuring its role in controlling the flow of information or resources between other nodes. It quantifies the frequency with which a node acts as a critical link along the shortest paths connecting pairs of other nodes in the network. Nodes with high betweenness centrality have a substantial influence over the transmission of information or resources, making them crucial in detecting illegal fishing activities by monitoring the flow of suspicious information or resources across the network.
+
+The graphs are first being converted into a normal data frame in order to proceed to do statistical analysis on the data frame. 
+
+Betweenness `mean` is being computed to set as a **threshold** to filter the graph further.
+
 ```{r}
-
-# Replace NaN values with 0 in the 'closeness_centrality' column
-mc3_graph <- mc3_graph %>%
-  mutate(closeness_centrality = replace(closeness_centrality, is.nan(closeness_centrality), 0))
-
+#| code-fold: false
 c_graph_analysis <- as.data.frame(mc3_graph)
 mean_graph <- mean(c_graph_analysis$betweenness_centrality)
-
-
 
 # Filter nodes based on betweenness centrality
 filtered_graph <- mc3_graph %>%
   filter(betweenness_centrality >= mean_graph)
 ```
+
+#### 5.2.1.1 Plotted Graph
 
 ```{r}
 # Identify single nodes (degree 0)
@@ -204,9 +301,7 @@ filtered_graph <- delete.vertices(filtered_graph, single_nodes)
 
 
 GNC <- cluster_louvain(filtered_graph, weights = NULL)
-```
 
-```{r}
 set.seed(1234)
 # Get the unique social groups in the filtered graph
 unique_groups <- unique(membership(GNC))
@@ -233,21 +328,24 @@ ggraph_output <- ggraph(filtered_graph, layout = "fr") +
   theme_graph()
 
 ggraph_output
-
-
-
 ```
+
+::: callout-tip
+`as.data.frame()` is being used to convert the graph data frame into a normal data frame for data analysis.
+:::
 
 Due to the limited size of the plot, the legend of each cluster is being shown below.
 
 ```{r}
+#| fig-width: 4
+#| fig-height: 4
 legend_plot <- ggplot(legend_data, aes(x = Membership, y = 0, color = Color)) +
   geom_point(size = 5, show.legend = FALSE, position = position_nudge(y = -0.2)) +
   labs(x = "Cluster", y = "") +
   scale_x_continuous(breaks = unique_groups) +
   scale_color_identity(guide = "legend") +  # Add color legend
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 0, vjust = 100, hjust = 0.5),
+  theme(axis.text.x = element_text(angle = 0, vjust = 80, hjust = 0.5),
         axis.text.y = element_blank(),
         axis.ticks.y = element_blank(),
         panel.grid.major = element_blank(),  # Remove major gridlines
@@ -255,18 +353,22 @@ legend_plot <- ggplot(legend_data, aes(x = Membership, y = 0, color = Color)) +
 legend_plot
 ```
 
-```{r}
-num_clusters <- length(unique(GNC$membership))
-num_clusters
-```
+#### 5.2.1.2 Analysis of the network graph
 
-## To analyse for each group and see whats their similarity
+Based on the plotted graph, there are **17** groups of cluster being formed using the `cluster_louvain()` function. Clustering using the Louvain method is a popular approach for detecting communities or clusters in complex networks. It is based on optimizing a quality function called modularity, which measures the strength of the division of a network into communities. 
 
-Nodes in each cluster and their respective product_services
+We are able to see some clusters have a certain connection (eg. cluster 3,5 & 7) while some remained just by their own.  however we cannot make any deduction without any further deep dive into each of the cluster.
+
+
+#### 5.2.1.3 Cluster Data
+
+First, we would like to understand which nodes and theirs respective attributes such as **country**, **type**, **revenue_omu**, **product_services** are in each of the cluster.
+
+Below is a panel allowing us to see each of the nodes based on their respective clusters.
 
 ::: panel-tabset
-
 ## Cluster 1
+
 ```{r}
 # Get the membership vector indicating the community assignment for each node
 membership <- membership(GNC)
@@ -274,8 +376,225 @@ membership <- membership(GNC)
 # Extract the nodes 
 nodes <- V(filtered_graph)[membership == 1]  
 
-# Extract the edges and their attributes based on the membership
-edges <- E(filtered_graph)[membership == 1]  # Replace '1' with the desired membership cluster
+# To extract the other columns under the same cluster
+product_services <- nodes$product_services
+type <- nodes$type
+country <- nodes$country
+revenue_omu <- nodes$revenue_omu
+id <- nodes$id
+
+# Combine the nodes and product services into a data frame
+df1 <- cbind(id, country, type, revenue_omu, product_services)
+
+DT::datatable(df1)
+```
+
+## Cluster 2
+
+```{r}
+# Get the membership vector indicating the community assignment for each node
+membership <- membership(GNC)
+
+# Extract the nodes 
+nodes <- V(filtered_graph)[membership == 2]  
+
+# To extract the other columns under the same cluster
+product_services <- nodes$product_services
+type <- nodes$type
+country <- nodes$country
+revenue_omu <- nodes$revenue_omu
+id <- nodes$id
+
+# Combine the nodes and product services into a data frame
+df2 <- cbind(id, country, type, revenue_omu, product_services)
+
+DT::datatable(df2)
+```
+
+## Cluster 3
+
+```{r}
+# Get the membership vector indicating the community assignment for each node
+membership <- membership(GNC)
+
+# Extract the nodes 
+nodes <- V(filtered_graph)[membership == 3]  
+
+# To extract the other columns under the same cluster
+product_services <- nodes$product_services
+type <- nodes$type
+country <- nodes$country
+revenue_omu <- nodes$revenue_omu
+id <- nodes$id
+
+# Combine the nodes and product services into a data frame
+df3 <- cbind(id, country, type, revenue_omu, product_services)
+
+DT::datatable(df3)
+```
+
+## Cluster 4
+
+```{r}
+# Get the membership vector indicating the community assignment for each node
+membership <- membership(GNC)
+
+# Extract the nodes 
+nodes <- V(filtered_graph)[membership == 4]  
+
+# To extract the other columns under the same cluster
+product_services <- nodes$product_services
+type <- nodes$type
+country <- nodes$country
+revenue_omu <- nodes$revenue_omu
+id <- nodes$id
+
+# Combine the nodes and product services into a data frame
+df4 <- cbind(id, country, type, revenue_omu, product_services)
+
+DT::datatable(df4)
+```
+
+## Cluster 5
+
+```{r}
+# Get the membership vector indicating the community assignment for each node
+membership <- membership(GNC)
+
+# Extract the nodes 
+nodes <- V(filtered_graph)[membership == 5]  
+
+# To extract the other columns under the same cluster
+product_services <- nodes$product_services
+type <- nodes$type
+country <- nodes$country
+revenue_omu <- nodes$revenue_omu
+id <- nodes$id
+
+# Combine the nodes and product services into a data frame
+df5 <- cbind(id, country, type, revenue_omu, product_services)
+
+DT::datatable(df5)
+```
+
+## Cluster 6
+
+```{r}
+# Get the membership vector indicating the community assignment for each node
+membership <- membership(GNC)
+
+# Extract the nodes 
+nodes <- V(filtered_graph)[membership == 6]  
+
+# To extract the other columns under the same cluster
+product_services <- nodes$product_services
+type <- nodes$type
+country <- nodes$country
+revenue_omu <- nodes$revenue_omu
+id <- nodes$id
+
+# Combine the nodes and product services into a data frame
+df6 <- cbind(id, country, type, revenue_omu, product_services)
+
+DT::datatable(df6)
+```
+
+## Cluster 7
+
+```{r}
+# Get the membership vector indicating the community assignment for each node
+membership <- membership(GNC)
+
+# Extract the nodes 
+nodes <- V(filtered_graph)[membership == 7]  
+
+# To extract the other columns under the same cluster
+product_services <- nodes$product_services
+type <- nodes$type
+country <- nodes$country
+revenue_omu <- nodes$revenue_omu
+id <- nodes$id
+
+# Combine the nodes and product services into a data frame
+df7 <- cbind(id, country, type, revenue_omu, product_services)
+
+DT::datatable(df7)
+```
+
+## Cluster 8
+
+```{r}
+# Get the membership vector indicating the community assignment for each node
+membership <- membership(GNC)
+
+# Extract the nodes 
+nodes <- V(filtered_graph)[membership == 8]  
+
+# To extract the other columns under the same cluster
+product_services <- nodes$product_services
+type <- nodes$type
+country <- nodes$country
+revenue_omu <- nodes$revenue_omu
+id <- nodes$id
+
+# Combine the nodes and product services into a data frame
+df8 <- cbind(id, country, type, revenue_omu, product_services)
+
+DT::datatable(df8)
+```
+
+## Cluster 9
+
+```{r}
+# Get the membership vector indicating the community assignment for each node
+membership <- membership(GNC)
+
+# Extract the nodes 
+nodes <- V(filtered_graph)[membership == 9]  
+
+# To extract the other columns under the same cluster
+product_services <- nodes$product_services
+type <- nodes$type
+country <- nodes$country
+revenue_omu <- nodes$revenue_omu
+id <- nodes$id
+
+# Combine the nodes and product services into a data frame
+df9 <- cbind(id, country, type, revenue_omu, product_services)
+
+DT::datatable(df9)
+```
+
+## Cluster 10
+
+```{r}
+# Get the membership vector indicating the community assignment for each node
+membership <- membership(GNC)
+
+# Extract the nodes 
+nodes <- V(filtered_graph)[membership == 10]  
+
+# To extract the other columns under the same cluster
+product_services <- nodes$product_services
+type <- nodes$type
+country <- nodes$country
+revenue_omu <- nodes$revenue_omu
+id <- nodes$id
+
+# Combine the nodes and product services into a data frame
+df10 <- cbind(id, country, type, revenue_omu, product_services)
+
+DT::datatable(df10)
+```
+
+## Cluster 11
+
+```{r}
+# Get the membership vector indicating the community assignment for each node
+membership <- membership(GNC)
+
+# Extract the nodes 
+nodes <- V(filtered_graph)[membership == 11]  
 
 
 # To extract the other columns under the same cluster
@@ -284,18 +603,1141 @@ type <- nodes$type
 country <- nodes$country
 revenue_omu <- nodes$revenue_omu
 id <- nodes$id
-edge_type <- edges$type
 
 # Combine the nodes and product services into a data frame
-df <- cbind(id, country, type,edge_type, revenue_omu, product_services)
+df11 <- cbind(id, country, type, revenue_omu, product_services)
 
-# Display the data frame in table format
-pander(kable(df))
+DT::datatable(df11)
+```
+
+## Cluster 12
+
+```{r}
+# Get the membership vector indicating the community assignment for each node
+membership <- membership(GNC)
+
+# Extract the nodes 
+nodes <- V(filtered_graph)[membership == 12]  
+
+# To extract the other columns under the same cluster
+product_services <- nodes$product_services
+type <- nodes$type
+country <- nodes$country
+revenue_omu <- nodes$revenue_omu
+id <- nodes$id
+
+# Combine the nodes and product services into a data frame
+df12 <- cbind(id, country, type, revenue_omu, product_services)
+
+DT::datatable(df12)
+```
+
+## Cluster 13
+
+```{r}
+# Get the membership vector indicating the community assignment for each node
+membership <- membership(GNC)
+
+# Extract the nodes 
+nodes <- V(filtered_graph)[membership == 13]  
+
+# To extract the other columns under the same cluster
+product_services <- nodes$product_services
+type <- nodes$type
+country <- nodes$country
+revenue_omu <- nodes$revenue_omu
+id <- nodes$id
+
+# Combine the nodes and product services into a data frame
+df13 <- cbind(id, country, type, revenue_omu, product_services)
+
+DT::datatable(df13)
+```
+
+## Cluster 14
+
+```{r}
+# Get the membership vector indicating the community assignment for each node
+membership <- membership(GNC)
+
+# Extract the nodes 
+nodes <- V(filtered_graph)[membership == 14]  
+
+# To extract the other columns under the same cluster
+product_services <- nodes$product_services
+type <- nodes$type
+country <- nodes$country
+revenue_omu <- nodes$revenue_omu
+id <- nodes$id
+
+# Combine the nodes and product services into a data frame
+df14 <- cbind(id, country, type, revenue_omu, product_services)
+
+DT::datatable(df14)
+```
+
+## Cluster 15
+
+```{r}
+# Get the membership vector indicating the community assignment for each node
+membership <- membership(GNC)
+
+# Extract the nodes 
+nodes <- V(filtered_graph)[membership == 15]  
+
+# To extract the other columns under the same cluster
+product_services <- nodes$product_services
+type <- nodes$type
+country <- nodes$country
+revenue_omu <- nodes$revenue_omu
+id <- nodes$id
+
+# Combine the nodes and product services into a data frame
+df15 <- cbind(id, country, type, revenue_omu, product_services)
+
+DT::datatable(df15)
+```
+
+## Cluster 16
+
+```{r}
+# Get the membership vector indicating the community assignment for each node
+membership <- membership(GNC)
+
+# Extract the nodes 
+nodes <- V(filtered_graph)[membership == 16]  
+
+# To extract the other columns under the same cluster
+product_services <- nodes$product_services
+type <- nodes$type
+country <- nodes$country
+revenue_omu <- nodes$revenue_omu
+id <- nodes$id
+
+# Combine the nodes and product services into a data frame
+df16 <- cbind(id, country, type, revenue_omu, product_services)
+
+DT::datatable(df16)
+```
+
+## Cluster 17
+
+```{r}
+# Get the membership vector indicating the community assignment for each node
+membership <- membership(GNC)
+
+# Extract the nodes 
+nodes <- V(filtered_graph)[membership == 17]  
+
+# To extract the other columns under the same cluster
+product_services <- nodes$product_services
+type <- nodes$type
+country <- nodes$country
+revenue_omu <- nodes$revenue_omu
+id <- nodes$id
+
+# Combine the nodes and product services into a data frame
+df17 <- cbind(id, country, type, revenue_omu, product_services)
+
+DT::datatable(df17)
 ```
 :::
 
-::: callout-tip
-`kable()` function converts the data frame df into a nicely formatted table
+Based on the results above, there are ids that are without of values of the attributes:
 
-`pander()` function displays the table in a viewer-friendly format.
+(1) country
+(2) type
+(3) revenue_omu
+(4) product services
+
+Based on their id values, they are actually human being's names. Compared in the edges dataset, the type values are "Beneficial Owner" and are connected with edges to  the nodes that contains the 5 common keywords in their product_services. As they are not included in the node dataset, hence we do not contain their information regarding the aforementioned attributes.
+
+#### 5.2.1.4 Nodes that are of with high betweenness centrality
+
+Below are the nodes with the top 10 betweenness centrality score.
+
+The identification of these will allow us to identify those who are likely to be involved illegal fishing activities as they are conncted with multiple edges to get the most.
+
+```{r}
+#df_between <- as.data.frame(filtered_graph)
+
+# Extract the nodes 
+nodes <- V(filtered_graph)  
+
+# To extract the other columns under the same cluster
+product_services <- nodes$product_services
+type <- nodes$type
+country <- nodes$country
+revenue_omu <- as.numeric(nodes$revenue_omu)
+id <- nodes$id
+betweenness_centrality <- as.numeric(nodes$betweenness_centrality)
+
+df_between <- cbind(id, country, type, revenue_omu, product_services, betweenness_centrality)
+df_between2 <- as.data.frame(df_between) 
+
+df_between2$revenue_omu <- as.numeric(as.character(df_between2$revenue_omu))
+df_between2$betweenness_centrality <- as.numeric(as.character(df_between2$betweenness_centrality))
+    
+df_between2 <- df_between2 %>%
+  arrange(desc(betweenness_centrality))
+DT::datatable(head(df_between2,10))
+```
+
+#### 5.2.1.5 Cluster representation
+
+Next, we looked into the each cluster/group and their respective 
+
+(1) count of nodes
+(2) count of countries 
+(3) top 3 words that are in the product_services
+
+::: panel-tabset
+
+## Cluster 1
+```{r}
+df1 <- as.data.frame(df1)
+row_count <- nrow(df1)
+group_column <- rep(c(1),times=row_count)
+df1$group <- group_column
+
+df <- df1 %>%
+    group_by(group) %>%
+    summarise(nodes_count = n_distinct(id), country_count = n_distinct(country)) 
+
+token_nodes <- df1 %>%
+  unnest_tokens(word, product_services)
+
+stop2 <- c("NA","character","0","unknown")
+
+stopwords_removed <- token_nodes %>%
+  anti_join(stop_words) %>%
+  filter(!str_detect(word, paste(stop2, collapse = "|")) & !is.na(word))
+
+# Count the stopwords
+stopwords_count <- stopwords_removed %>%
+  count(word) %>%
+  top_n(3) %>%
+  arrange(desc(n))
+
+# Combine the values of a column into a string with commas
+combined_string <- stopwords_count %>%
+  pull(word) %>%
+  paste(collapse = ", ")
+
+df$top3_words <- combined_string
+
+dftry1 <- df
+dftry1
+
+```
+
+## Cluster 2
+```{r}
+df2 <- as.data.frame(df2)
+row_count <- nrow(df2)
+group_column <- rep(c(2),times=row_count)
+df2$group <- group_column
+
+df <- df2 %>%
+    group_by(group) %>%
+    summarise(nodes_count = n_distinct(id), country_count = n_distinct(country)) 
+
+token_nodes <- df2 %>%
+  unnest_tokens(word, product_services)
+
+stop2 <- c("NA","character","0","unknown")
+
+stopwords_removed <- token_nodes %>%
+  anti_join(stop_words) %>%
+  filter(!str_detect(word, paste(stop2, collapse = "|")) & !is.na(word))
+
+# Count the stopwords
+stopwords_count <- stopwords_removed %>%
+  count(word) %>%
+  top_n(3) %>%
+  arrange(desc(n))
+
+# Combine the values of a column into a string with commas
+combined_string <- stopwords_count %>%
+  pull(word) %>%
+  paste(collapse = ", ")
+
+df$top3_words <- combined_string
+
+dftry2 <- df
+dftry2
+```
+
+## Cluster 3
+```{r}
+df3 <- as.data.frame(df3)
+row_count <- nrow(df3)
+group_column <- rep(c(3),times=row_count)
+df3$group <- group_column
+
+df <- df3 %>%
+    group_by(group) %>%
+    summarise(nodes_count = n_distinct(id), country_count = n_distinct(country)) 
+
+token_nodes <- df3 %>%
+  unnest_tokens(word, product_services)
+
+stop2 <- c("NA","character","0","unknown")
+
+stopwords_removed <- token_nodes %>%
+  anti_join(stop_words) %>%
+  filter(!str_detect(word, paste(stop2, collapse = "|")) & !is.na(word))
+
+# Count the stopwords
+stopwords_count <- stopwords_removed %>%
+  count(word) %>%
+  top_n(3) %>%
+  arrange(desc(n))
+
+# Combine the values of a column into a string with commas
+combined_string <- stopwords_count %>%
+  pull(word) %>%
+  paste(collapse = ", ")
+
+df$top3_words <- combined_string
+
+dftry3 <- df
+dftry3
+```
+
+## Cluster 4
+```{r}
+df4 <- as.data.frame(df4)
+row_count <- nrow(df4)
+group_column <- rep(c(4),times=row_count)
+df4$group <- group_column
+
+df <- df4 %>%
+    group_by(group) %>%
+    summarise(nodes_count = n_distinct(id), country_count = n_distinct(country)) 
+
+token_nodes <- df4 %>%
+  unnest_tokens(word, product_services)
+
+stop2 <- c("NA","character","0","unknown")
+
+stopwords_removed <- token_nodes %>%
+  anti_join(stop_words) %>%
+  filter(!str_detect(word, paste(stop2, collapse = "|")) & !is.na(word))
+
+# Count the stopwords
+stopwords_count <- stopwords_removed %>%
+  count(word) %>%
+  top_n(3) %>%
+  arrange(desc(n))
+
+# Combine the values of a column into a string with commas
+combined_string <- stopwords_count %>%
+  pull(word) %>%
+  paste(collapse = ", ")
+
+df$top3_words <- combined_string
+
+dftry4 <- df
+dftry4
+```
+
+## Cluster 5
+```{r}
+df5 <- as.data.frame(df5)
+row_count <- nrow(df5)
+group_column <- rep(c(5),times=row_count)
+df5$group <- group_column
+
+df <- df5 %>%
+    group_by(group) %>%
+    summarise(nodes_count = n_distinct(id), country_count = n_distinct(country)) 
+
+token_nodes <- df5 %>%
+  unnest_tokens(word, product_services)
+
+stop2 <- c("NA","character","0","unknown")
+
+stopwords_removed <- token_nodes %>%
+  anti_join(stop_words) %>%
+  filter(!str_detect(word, paste(stop2, collapse = "|")) & !is.na(word))
+
+# Count the stopwords
+stopwords_count <- stopwords_removed %>%
+  count(word) %>%
+  top_n(3) %>%
+  arrange(desc(n))
+
+# Combine the values of a column into a string with commas
+combined_string <- stopwords_count %>%
+  pull(word) %>%
+  paste(collapse = ", ")
+
+df$top3_words <- combined_string
+
+dftry5 <- df
+dftry5
+```
+
+## Cluster 6
+```{r}
+df6 <- as.data.frame(df6)
+row_count <- nrow(df6)
+group_column <- rep(c(6),times=row_count)
+df6$group <- group_column
+
+df <- df6 %>%
+    group_by(group) %>%
+    summarise(nodes_count = n_distinct(id), country_count = n_distinct(country)) 
+
+token_nodes <- df6 %>%
+  unnest_tokens(word, product_services)
+
+stop2 <- c("NA","character","0","unknown")
+
+stopwords_removed <- token_nodes %>%
+  anti_join(stop_words) %>%
+  filter(!str_detect(word, paste(stop2, collapse = "|")) & !is.na(word))
+
+# Count the stopwords
+stopwords_count <- stopwords_removed %>%
+  count(word) %>%
+  top_n(3) %>%
+  arrange(desc(n))
+
+# Combine the values of a column into a string with commas
+combined_string <- stopwords_count %>%
+  pull(word) %>%
+  paste(collapse = ", ")
+
+df$top3_words <- combined_string
+
+dftry6 <- df
+dftry6
+```
+
+## Cluster 7
+```{r}
+df7 <- as.data.frame(df7)
+row_count <- nrow(df7)
+group_column <- rep(c(7),times=row_count)
+df7$group <- group_column
+
+df <- df7 %>%
+    group_by(group) %>%
+    summarise(nodes_count = n_distinct(id), country_count = n_distinct(country)) 
+
+token_nodes <- df7 %>%
+  unnest_tokens(word, product_services)
+
+stop2 <- c("NA","character","0","unknown")
+
+stopwords_removed <- token_nodes %>%
+  anti_join(stop_words) %>%
+  filter(!str_detect(word, paste(stop2, collapse = "|")) & !is.na(word))
+
+# Count the stopwords
+stopwords_count <- stopwords_removed %>%
+  count(word) %>%
+  top_n(3) %>%
+  arrange(desc(n))
+
+# Combine the values of a column into a string with commas
+combined_string <- stopwords_count %>%
+  pull(word) %>%
+  paste(collapse = ", ")
+
+df$top3_words <- combined_string
+
+dftry7 <- df
+dftry7
+```
+
+## Cluster 8
+```{r}
+df8 <- as.data.frame(df8)
+row_count <- nrow(df8)
+group_column <- rep(c(8),times=row_count)
+df8$group <- group_column
+
+df <- df8 %>%
+    group_by(group) %>%
+    summarise(nodes_count = n_distinct(id), country_count = n_distinct(country)) 
+
+token_nodes <- df8 %>%
+  unnest_tokens(word, product_services)
+
+stop2 <- c("NA","character","0","unknown")
+
+stopwords_removed <- token_nodes %>%
+  anti_join(stop_words) %>%
+  filter(!str_detect(word, paste(stop2, collapse = "|")) & !is.na(word))
+
+# Count the stopwords
+stopwords_count <- stopwords_removed %>%
+  count(word) %>%
+  top_n(3) %>%
+  arrange(desc(n))
+
+# Combine the values of a column into a string with commas
+combined_string <- stopwords_count %>%
+  pull(word) %>%
+  paste(collapse = ", ")
+
+df$top3_words <- combined_string
+
+dftry8 <- df
+dftry8
+```
+
+## Cluster 9
+```{r}
+df9 <- as.data.frame(df9)
+row_count <- nrow(df9)
+group_column <- rep(c(9),times=row_count)
+df9$group <- group_column
+
+df <- df9 %>%
+    group_by(group) %>%
+    summarise(nodes_count = n_distinct(id), country_count = n_distinct(country)) 
+
+token_nodes <- df9 %>%
+  unnest_tokens(word, product_services)
+
+stop2 <- c("NA","character","0","unknown")
+
+stopwords_removed <- token_nodes %>%
+  anti_join(stop_words) %>%
+  filter(!str_detect(word, paste(stop2, collapse = "|")) & !is.na(word))
+
+# Count the stopwords
+stopwords_count <- stopwords_removed %>%
+  count(word) %>%
+  top_n(3) %>%
+  arrange(desc(n))
+
+# Combine the values of a column into a string with commas
+combined_string <- stopwords_count %>%
+  pull(word) %>%
+  paste(collapse = ", ")
+
+df$top3_words <- combined_string
+
+dftry9 <- df
+dftry9
+```
+
+## Cluster 10
+```{r}
+df10 <- as.data.frame(df10)
+row_count <- nrow(df10)
+group_column <- rep(c(10),times=row_count)
+df10$group <- group_column
+
+df <- df10 %>%
+    group_by(group) %>%
+    summarise(nodes_count = n_distinct(id), country_count = n_distinct(country)) 
+
+token_nodes <- df10 %>%
+  unnest_tokens(word, product_services)
+
+stop2 <- c("NA","character","0","unknown")
+
+stopwords_removed <- token_nodes %>%
+  anti_join(stop_words) %>%
+  filter(!str_detect(word, paste(stop2, collapse = "|")) & !is.na(word))
+
+# Count the stopwords
+stopwords_count <- stopwords_removed %>%
+  count(word) %>%
+  top_n(3) %>%
+  arrange(desc(n))
+
+# Combine the values of a column into a string with commas
+combined_string <- stopwords_count %>%
+  pull(word) %>%
+  paste(collapse = ", ")
+
+df$top3_words <- combined_string
+
+dftry10 <- df
+dftry10
+```
+
+## Cluster 11
+```{r}
+df11 <- as.data.frame(df11)
+row_count <- nrow(df11)
+group_column <- rep(c(11),times=row_count)
+df11$group <- group_column
+
+df <- df11 %>%
+    group_by(group) %>%
+    summarise(nodes_count = n_distinct(id), country_count = n_distinct(country)) 
+
+token_nodes <- df11 %>%
+  unnest_tokens(word, product_services)
+
+stop2 <- c("NA","character","0","unknown")
+
+stopwords_removed <- token_nodes %>%
+  anti_join(stop_words) %>%
+  filter(!str_detect(word, paste(stop2, collapse = "|")) & !is.na(word))
+
+# Count the stopwords
+stopwords_count <- stopwords_removed %>%
+  count(word) %>%
+  top_n(3) %>%
+  arrange(desc(n))
+
+# Combine the values of a column into a string with commas
+combined_string <- stopwords_count %>%
+  pull(word) %>%
+  paste(collapse = ", ")
+
+df$top3_words <- combined_string
+
+dftry11 <- df
+dftry11
+```
+
+## Cluster 12
+```{r}
+df12 <- as.data.frame(df12)
+row_count <- nrow(df12)
+group_column <- rep(c(12),times=row_count)
+df12$group <- group_column
+
+df <- df12 %>%
+    group_by(group) %>%
+    summarise(nodes_count = n_distinct(id), country_count = n_distinct(country)) 
+
+token_nodes <- df12 %>%
+  unnest_tokens(word, product_services)
+
+stop2 <- c("NA","character","0","unknown")
+
+stopwords_removed <- token_nodes %>%
+  anti_join(stop_words) %>%
+  filter(!str_detect(word, paste(stop2, collapse = "|")) & !is.na(word))
+
+# Count the stopwords
+stopwords_count <- stopwords_removed %>%
+  count(word) %>%
+  top_n(3) %>%
+  arrange(desc(n))
+
+# Combine the values of a column into a string with commas
+combined_string <- stopwords_count %>%
+  pull(word) %>%
+  paste(collapse = ", ")
+
+df$top3_words <- combined_string
+
+dftry12 <- df
+dftry12
+```
+
+## Cluster 13
+```{r}
+df13 <- as.data.frame(df13)
+row_count <- nrow(df13)
+group_column <- rep(c(13),times=row_count)
+df13$group <- group_column
+
+df <- df13 %>%
+    group_by(group) %>%
+    summarise(nodes_count = n_distinct(id), country_count = n_distinct(country)) 
+
+token_nodes <- df13 %>%
+  unnest_tokens(word, product_services)
+
+stop2 <- c("NA","character","0","unknown")
+
+stopwords_removed <- token_nodes %>%
+  anti_join(stop_words) %>%
+  filter(!str_detect(word, paste(stop2, collapse = "|")) & !is.na(word))
+
+# Count the stopwords
+stopwords_count <- stopwords_removed %>%
+  count(word) %>%
+  top_n(3) %>%
+  arrange(desc(n))
+
+# Combine the values of a column into a string with commas
+combined_string <- stopwords_count %>%
+  pull(word) %>%
+  paste(collapse = ", ")
+
+df$top3_words <- combined_string
+
+dftry13 <- df
+dftry13
+```
+
+## Cluster 14
+```{r}
+df14 <- as.data.frame(df14)
+row_count <- nrow(df14)
+group_column <- rep(c(14),times=row_count)
+df14$group <- group_column
+
+df <- df14 %>%
+    group_by(group) %>%
+    summarise(nodes_count = n_distinct(id), country_count = n_distinct(country)) 
+
+token_nodes <- df14 %>%
+  unnest_tokens(word, product_services)
+
+stop2 <- c("NA","character","0","unknown")
+
+stopwords_removed <- token_nodes %>%
+  anti_join(stop_words) %>%
+  filter(!str_detect(word, paste(stop2, collapse = "|")) & !is.na(word))
+
+# Count the stopwords
+stopwords_count <- stopwords_removed %>%
+  count(word) %>%
+  top_n(3) %>%
+  arrange(desc(n))
+
+# Combine the values of a column into a string with commas
+combined_string <- stopwords_count %>%
+  pull(word) %>%
+  paste(collapse = ", ")
+
+df$top3_words <- combined_string
+
+dftry14 <- df
+dftry14
+```
+
+## Cluster 15
+```{r}
+df15 <- as.data.frame(df15)
+row_count <- nrow(df15)
+group_column <- rep(c(15),times=row_count)
+df15$group <- group_column
+
+df <- df15 %>%
+    group_by(group) %>%
+    summarise(nodes_count = n_distinct(id), country_count = n_distinct(country)) 
+
+token_nodes <- df15 %>%
+  unnest_tokens(word, product_services)
+
+stop2 <- c("NA","character","0","unknown")
+
+stopwords_removed <- token_nodes %>%
+  anti_join(stop_words) %>%
+  filter(!str_detect(word, paste(stop2, collapse = "|")) & !is.na(word))
+
+# Count the stopwords
+stopwords_count <- stopwords_removed %>%
+  count(word) %>%
+  top_n(3) %>%
+  arrange(desc(n))
+
+# Combine the values of a column into a string with commas
+combined_string <- stopwords_count %>%
+  pull(word) %>%
+  paste(collapse = ", ")
+
+df$top3_words <- combined_string
+
+dftry15 <- df
+dftry15
+```
+
+## Cluster 16
+```{r}
+df16 <- as.data.frame(df16)
+row_count <- nrow(df16)
+group_column <- rep(c(16),times=row_count)
+df16$group <- group_column
+
+df <- df16 %>%
+    group_by(group) %>%
+    summarise(nodes_count = n_distinct(id), country_count = n_distinct(country)) 
+
+token_nodes <- df16 %>%
+  unnest_tokens(word, product_services)
+
+stop2 <- c("NA","character","0","unknown")
+
+stopwords_removed <- token_nodes %>%
+  anti_join(stop_words) %>%
+  filter(!str_detect(word, paste(stop2, collapse = "|")) & !is.na(word))
+
+# Count the stopwords
+stopwords_count <- stopwords_removed %>%
+  count(word) %>%
+  top_n(3) %>%
+  arrange(desc(n))
+
+# Combine the values of a column into a string with commas
+combined_string <- stopwords_count %>%
+  pull(word) %>%
+  paste(collapse = ", ")
+
+df$top3_words <- combined_string
+
+dftry16 <- df
+dftry16
+```
+
+## Cluster 17
+```{r}
+df17 <- as.data.frame(df17)
+row_count <- nrow(df17)
+group_column <- rep(c(17),times=row_count)
+df17$group <- group_column
+
+df <- df17 %>%
+    group_by(group) %>%
+    summarise(nodes_count = n_distinct(id), country_count = n_distinct(country)) 
+
+token_nodes <- df17 %>%
+  unnest_tokens(word, product_services)
+
+stop2 <- c("NA","character","0","unknown")
+
+stopwords_removed <- token_nodes %>%
+  anti_join(stop_words) %>%
+  filter(!str_detect(word, paste(stop2, collapse = "|")) & !is.na(word))
+
+# Count the stopwords
+stopwords_count <- stopwords_removed %>%
+  count(word) %>%
+  top_n(3) %>%
+  arrange(desc(n))
+
+# Combine the values of a column into a string with commas
+combined_string <- stopwords_count %>%
+  pull(word) %>%
+  paste(collapse = ", ")
+
+df$top3_words <- combined_string
+
+dftry17 <- df
+dftry17
+```
 :::
+
+::: callout-note
+The top 3 words column may contain more than 3 words if the words have the same number of count of occurence.
+:::
+
+Based on all the different cluster, below is a combined table for a better view.
+
+```{r}
+dftry_all <- rbind(dftry1
+                        ,dftry2
+                        ,dftry3
+                        ,dftry4
+                        ,dftry5
+                        ,dftry6
+                        ,dftry7
+                        ,dftry8
+                        ,dftry9
+                        ,dftry10
+                        ,dftry11
+                        ,dftry12
+                        ,dftry13
+                        ,dftry14
+                        ,dftry15
+                        ,dftry16
+                        ,dftry17)
+dftry_all
+```
+
+Based on the observed groupings in the network, we can draw some conclusions about the relationships between the connected clusters.
+
+Cluster 6 & 9: Cluster 9 seems to have a connection with the chemical industry and is involved in the production of seafood, such as fish and lobster. It is likely that Cluster 6 nodes provide the necessary accessories or equipment for these activities.
+
+Cluster 12 & 15: Cluster 12 focuses on seafood products and materials, while Cluster 15 provides transportation and technology services related to the seafood industry. This suggests a collaborative relationship where Cluster 12 supplies the seafood products, and Cluster 15 facilitates their distribution and supports technological advancements in the industry.
+
+Cluster 3, 5, & 7: Clusters 5 and 7 share similar top 3 words that are primarily related to fish products. It is likely that they are involved in the direct supply of seafood. Cluster 3, on the other hand, appears to be connected to a food and beverage entity, as keywords related to kitchens and food are mentioned. Clusters 5 and 7 may serve as direct seafood suppliers to the food and beverage entities in Cluster 3.
+
+In summary, these groupings suggest specific relationships and collaborations between clusters, with some clusters specializing in seafood production, others in transportation and technology, and others in supplying seafood to the food and beverage industry. These relationships can provide insights into potential connections and activities related to the seafood industry, including the possibility of illegal fishing practices. Further investigation and monitoring of these clusters and their connections can help uncover any illicit activities and facilitate appropriate measures to address them.
+
+
+### 5.2.2 Closeness Centrality
+
+Closeness centrality is a measure of how close a node is to all other nodes in a network. It calculates the average distance from a node to all other nodes in the network. Nodes with high closeness centrality have shorter average distances to other nodes, enabling them to quickly and efficiently reach a wide range of nodes. In the context of identifying illegal fishing activities, nodes with high closeness centrality can act as strategic monitoring points, allowing for rapid dissemination of relevant information and effective coordination among nodes to detect and respond to illegal fishing incidents.
+
+Similar steps are being taken but with the replacement of betweenness_centrality value with closeness_centrality.
+
+```{r}
+#| code-fold: false
+# Replace NaN values with 0 in the 'closeness_centrality' column
+mc3_graph <- mc3_graph %>%
+  mutate(closeness_centrality = replace(closeness_centrality, is.nan(closeness_centrality), 0))
+
+c_graph_analysis <- as.data.frame(mc3_graph)
+mean_graph <- mean(c_graph_analysis$closeness_centrality)
+
+# Filter nodes based on betweenness centrality
+filtered_graph <- mc3_graph %>%
+  filter(closeness_centrality >= mean_graph)
+```
+
+#### 5.2.2.1 Plotted Graph
+
+````{r}
+# Identify single nodes (degree 0)
+single_nodes <- V(filtered_graph)[degree(filtered_graph) == 0]
+
+# Remove single nodes from the filtered graph
+filtered_graph <- delete.vertices(filtered_graph, single_nodes)
+
+
+GNC <- cluster_louvain(filtered_graph, weights = NULL)
+
+set.seed(1234)
+# Get the unique social groups in the filtered graph
+unique_groups <- unique(membership(GNC))
+
+# Set the node colors using the rainbow_hcl palette from the colorspace package
+node_colors <- rainbow_hcl(length(unique_groups))
+
+# Add the node colors to the filtered graph
+V(filtered_graph)$color <- node_colors[membership(GNC)]
+
+# Create a data frame with the membership numbers and corresponding colors
+# Create a data frame with the membership numbers, colors, and labels
+legend_data <- data.frame(Membership = unique_groups, Color = node_colors)
+
+
+# Plot the filtered graph
+ggraph_output <- ggraph(filtered_graph, layout = "fr") +
+  geom_edge_link(aes(alpha = 0.5)) +
+  geom_node_point(aes(size = betweenness_centrality, color = as.factor(membership(GNC))), alpha = 0.5) +
+  #geom_node_text(aes(label = membership(GNC)), vjust = -1) +
+  scale_size_continuous(range = c(1, 10)) +
+  scale_color_manual(values = node_colors) +  # Set the node colors manually
+  guides(color = FALSE) +  # Remove the color legend
+  theme_graph()
+
+ggraph_output
+```
+
+The number of of clusters formed based on closeness centrality
+```{r}
+length(unique_groups)
+```
+
+#### 5.2.2.2 Analysis of the network graph
+
+Based on the graph plotted above, a lot of distinct groups are being formed, hence no specific connection that we are able to detect through closeness centrality.
+
+#### 5.2.2.3 Nodes that are of with high closeness centrality
+
+Below are the nodes with the top 10 closeness centrality score.
+
+The identification of these will allow us to identify those who are likely to be involved illegal fishing activities as the neighboring nodes will be affected by nodes with high closeness centrality.
+
+```{r}
+#df_between <- as.data.frame(filtered_graph)
+
+# Extract the nodes 
+nodes <- V(filtered_graph)  
+
+# To extract the other columns under the same cluster
+product_services <- nodes$product_services
+type <- nodes$type
+country <- nodes$country
+revenue_omu <- as.numeric(nodes$revenue_omu)
+id <- nodes$id
+closeness_centrality <- as.numeric(nodes$closeness_centrality)
+
+df_close <- cbind(id, country, type, revenue_omu, product_services, closeness_centrality)
+df_close2 <- as.data.frame(df_close) 
+
+df_close2$revenue_omu <- as.numeric(as.character(df_close2$revenue_omu))
+df_close2$closeness_centrality <- as.numeric(as.character(df_close2$closeness_centrality))
+    
+df_close2 <- df_close2 %>%
+  arrange(desc(closeness_centrality))
+DT::datatable(head(df_close2,10))
+```
+
+
+Based on the top 10 closeness_centrality nodes, all of the scores are 1. 
+Below we look in further to see the distribution of closeness_centrality across the nodes.
+
+#### 5.2.2.4 Closeness Centrality Distribution
+
+```{r}
+plot_ly(
+  data = df_close2,
+  y = ~closeness_centrality,
+  x = ~type,
+  type = "box",
+  boxmean = TRUE,
+  color = ~type,
+  showlegend = FALSE,
+  boxpoints = "all"
+) %>%
+layout(title = 'Closeness Centrality across Type')
+```
+
+According to the boxplot analysis, nodes categorized as **Company** showed a higher prevalence of having a closeness centrality score of 1 compared to other types of nodes. This can be attributed to the fact that companies in the fishing industry are often perceived as more reputable and established, with extensive connections to other nodes in the network. As a result, they are more likely to have direct and influential relationships with a larger number of nodes.
+
+In the context of the fishing industry, it is common for trade and business transactions to involve companies rather than individual entities. This preference stems from the perception that dealing with established companies reduces risks and offers greater trade rewards. These companies have established networks, resources, and relationships, enabling them to have a higher degree of connectivity and influence within the network.
+
+Therefore, the boxplot suggests that companies play a significant role in the network, acting as central and influential nodes due to their extensive connections and reputation. Identifying these key **Company** nodes with high closeness centrality can provide insights into the structure and dynamics of the fishing industry, highlighting the importance of strong company networks in facilitating trade and potentially aiding in the detection of illegal fishing activities.
+
+### 5.2.3 Eigenvector Centrality
+
+Eigenvector centrality gauges the importance or influence of a node in a network based on its connections. It assigns a centrality score to each node, considering not only its own connections but also the connections of its neighboring nodes. Nodes with high eigenvector centrality receive high centrality scores if they are connected to other nodes that themselves have significant centrality scores. By examining eigenvector centrality, it becomes possible to identify key nodes that have a strong influence within the network and can aid in detecting illegal fishing activities. These nodes can serve as hubs for information dissemination, allowing for effective communication and collaboration to combat illegal fishing.
+
+Similar steps are being taken but with the replacement of closeness_centrality value with eigen_centrality.
+
+```{r}
+#| code-fold: false
+# Replace NaN values with 0 in the 'eigenvector_centrality' column
+mc3_graph <- mc3_graph %>%
+  mutate(eigen_centrality = replace(eigen_centrality, is.nan(eigen_centrality), 0))
+
+c_graph_analysis <- as.data.frame(mc3_graph)
+mean_graph <- mean(c_graph_analysis$eigen_centrality)
+
+# Filter nodes based on eigenvector centrality
+filtered_graph <- mc3_graph %>%
+  filter(eigen_centrality >= mean_graph)
+```
+
+#### 5.2.3.1 Plotted Graph
+
+````{r}
+# Identify single nodes (degree 0)
+single_nodes <- V(filtered_graph)[degree(filtered_graph) == 0]
+
+# Remove single nodes from the filtered graph
+filtered_graph <- delete.vertices(filtered_graph, single_nodes)
+
+
+GNC <- cluster_louvain(filtered_graph, weights = NULL)
+
+set.seed(1234)
+# Get the unique social groups in the filtered graph
+unique_groups <- unique(membership(GNC))
+
+# Set the node colors using the rainbow_hcl palette from the colorspace package
+node_colors <- rainbow_hcl(length(unique_groups))
+
+# Add the node colors to the filtered graph
+V(filtered_graph)$color <- node_colors[membership(GNC)]
+
+# Create a data frame with the membership numbers and corresponding colors
+# Create a data frame with the membership numbers, colors, and labels
+legend_data <- data.frame(Membership = unique_groups, Color = node_colors)
+
+
+# Plot the filtered graph
+ggraph_output <- ggraph(filtered_graph, layout = "fr") +
+  geom_edge_link(aes(alpha = 0.5)) +
+  geom_node_point(aes(size = eigen_centrality, color = as.factor(membership(GNC))), alpha = 0.5) +
+  #geom_node_text(aes(label = membership(GNC)), vjust = -1) +
+  scale_size_continuous(range = c(1, 10)) +
+  scale_color_manual(values = node_colors) +  # Set the node colors manually
+  guides(color = FALSE) +  # Remove the color legend
+  theme_graph()
+
+ggraph_output
+```
+
+Due to the limited size of the plot, the legend of each cluster is being shown below.
+
+```{r}
+#| fig-width: 4
+#| fig-height: 4
+legend_plot <- ggplot(legend_data, aes(x = Membership, y = 0, color = Color)) +
+  geom_point(size = 5, show.legend = FALSE, position = position_nudge(y = -0.2)) +
+  labs(x = "Cluster", y = "") +
+  scale_x_continuous(breaks = unique_groups) +
+  scale_color_identity(guide = "legend") +  # Add color legend
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 0, vjust = 80, hjust = 0.5),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        panel.grid.major = element_blank(),  # Remove major gridlines
+        panel.grid.minor = element_blank())  # Remove minor gridlines
+legend_plot
+```
+
+The number of of clusters formed based on eigenvector centrality
+```{r}
+length(unique_groups)
+```
+#### 5.2.3.2 Analysis of the network graph
+
+The graph analysis revealed that Cluster 8 emerged as the largest cluster in terms of node count. Within this cluster, a specific node stands out with the highest eigenvector centrality score. Eigenvector centrality measures the importance of a node based on its connections to other influential nodes in the network. In this case, the node with the highest eigenvector centrality in Cluster 8 is not only well-connected within its own cluster but also has connections to nodes in other clusters.
+
+This highly central node in Cluster 8 plays a crucial role in facilitating the flow of information, communication, and collaboration among different clusters. As a result, it acts as a key hub for disseminating information related to combating illegal fishing activities. By leveraging its extensive connections, this node can effectively share important insights, raise awareness, and foster collaboration across clusters.
+
+The presence of such influential nodes with high eigenvector centrality is beneficial in combating illegal fishing. They serve as bridges between clusters, enabling the exchange of knowledge, resources, and strategies to address the issue collectively. Their position as information hubs allows for efficient communication and coordination among various stakeholders involved in combating illegal fishing, including government agencies, conservation organizations, and industry players.
+
+The prominence of Cluster 8 and the central node's high eigenvector centrality highlight the significance of collaboration and information sharing across clusters to combat illegal fishing effectively. By leveraging the network's structure and the influence of these central nodes, stakeholders can enhance their efforts in detecting, preventing, and mitigating illegal fishing activities by fostering collaboration, sharing best practices, and coordinating joint actions.
+
+#### 5.2.3.3 Nodes that are of with high eigenvector centrality
+
+```{r}
+#df_between <- as.data.frame(filtered_graph)
+
+# Extract the nodes 
+nodes <- V(filtered_graph)  
+
+# To extract the other columns under the same cluster
+product_services <- nodes$product_services
+type <- nodes$type
+country <- nodes$country
+revenue_omu <- as.numeric(nodes$revenue_omu)
+id <- nodes$id
+eigen_centrality <- as.numeric(nodes$eigen_centrality)
+
+df_eigen <- cbind(id, country, type, revenue_omu, product_services, eigen_centrality)
+df_eigen2 <- as.data.frame(df_eigen) 
+
+df_eigen2$revenue_omu <- as.numeric(as.character(df_eigen2$revenue_omu))
+df_eigen2$eigen_centrality <- as.numeric(as.character(df_eigen2$eigen_centrality))
+    
+df_eigen2 <- df_eigen2 %>%
+  mutate(type = replace(type, is.na(type), "Business Owner")) %>%
+  arrange(desc(eigen_centrality))
+DT::datatable(head(df_eigen2,10))
+```
+
+**Vespuci Sandbar Sp Brothers** appeared to be the only node that has a 1 eigencentrality score while the rest are below 0.1. Next we look further into the eigenvector centrality distribution.
+
+#### 5.2.3.4 Eigenvector Centrality Distribution
+
+```{r}
+plot_ly(
+  data = df_eigen2,
+  y = ~eigen_centrality,
+  x = ~type,
+  type = "box",
+  boxmean = TRUE,
+  color = ~type,
+  showlegend = FALSE,
+  boxpoints = "all"
+) %>%
+layout(title = 'Eigenvector Centrality across Type')
+```
+
+
+According to the boxplot distribution graph and the top 10 table, it is evident that there is a significant disparity in the eigenvector centrality scores among the nodes. Only one node stands out with the highest centrality score of 1, indicating its prominence and influence within the network. On the other hand, the remaining nodes have relatively low eigenvector centrality scores, mostly below 0.1. This implies that the majority of nodes in the network are not as well-connected or influential. The presence of a single node with a high centrality score suggests a potential association with illegal fishing activities, as it could serve as a key player in facilitating communication and coordination among other nodes involved in such illicit practices. Further investigation and monitoring of this highly influential node and its connections are warranted to address and mitigate illegal fishing effectively.
+
+# 6. Insights and Learning points
+
+The combination of text analysis and network centrality measures provides a comprehensive approach to detect and understand illegal fishing activities. Text analysis, such as wordcloud analysis, helps identify key words and phrases associated with illegal fishing, giving insights into the language and terminology used in this context. Network centrality measures, including betweenness, closeness, and eigenvector centrality, allow the assessment of the importance and influence of individual nodes within the network.
+
+The betweenness and eigenvector centrality measures offer valuable insights into the network structure and dynamics of illegal fishing activities. They identify nodes that act as intermediaries, facilitators, and influencers in the network. By targeting these critical nodes, it becomes possible to disrupt the coordination, communication, and power dynamics that sustain illegal fishing operations. These measures help pinpoint influential nodes that play a crucial role in organizing and coordinating illegal fishing activities.
+
+Closeness centrality, although not ideal for clustering, plays a significant role in identifying nodes with direct impacts on others. These nodes may serve as influential hubs in the spread of illegal fishing practices. Their high centrality indicates their potential to coordinate and influence other nodes, making them important targets for investigation and intervention.
+
+However, it is important to recognize that this analysis is an initial step and further research is necessary to refine the approach. Establishing predefined illegal fishing actions or behaviors can enhance the detection and identification of potential instances. Exploring correlations between factors such as revenue, product services, and the occurrence of illegal fishing can provide insights into the underlying drivers and motivations behind these illicit activities.
+
+By expanding our understanding and incorporating additional information, we can improve the accuracy and effectiveness of detecting and combating illegal fishing activities. This knowledge can inform targeted interventions, policy decisions, and enforcement efforts aimed at curbing illegal fishing practices and safeguarding marine ecosystems.
